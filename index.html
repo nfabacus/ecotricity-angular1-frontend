@@ -13,9 +13,9 @@
     <h1 id="instruction">Electric Highway Finder</h1>
 
 
-      <div ng-controller="newPlaceCtrl as npCtrl">
+    <div class="selectBox" ng-controller="mainCtrl as mCtrl">
 
-          <form name="searchForm" novalidate
+          <!-- <form name="searchForm" novalidate
           ng-submit="npCtrl.search()">
               <div>
                   <input name="place" type="text" ng-model="searchPlace" required autofocus />
@@ -23,12 +23,11 @@
                       <button ng-disabled="searchForm.$invalid">Search</button>
                   </span>
               </div>
-          </form>
+          </form> -->
 
           <div id="map"></div>
+          <div id="instruction"></div>
 
-      </div>
-    <div class="selectBox" ng-controller="mainCtrl as mCtrl">
       <label for="cars">Please select your electric car: </label>
       <select ng-model="selectedCar" ng-options="car as car.vehicleMake +' '+car.vehicleModel + ' '+car.vehicleSpec for car in mCtrl.listOfCars" class="selectBox" ng-change="mCtrl.select_car(selectedCar)"></select>
 
