@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html ng-app="ecoAngular1App">
+  <head>
+    <meta charset="utf-8">
+    <title>Ecotricity Angular1 App</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="node_modules/angular/angular.min.js"></script>
+  <script src="angularApp.js"></script>
+  <script src="api-test.js"></script>
+  </head>
+  <body >
+    <h1 id="instruction">Electric Highway Finder</h1>
+
+
+      <div ng-controller="newPlaceCtrl as npCtrl">
+
+          <form name="searchForm" novalidate
+          ng-submit="npCtrl.search()">
+              <div>
+                  <input name="place" type="text" ng-model="searchPlace" required autofocus />
+                  <span >
+                      <button ng-disabled="searchForm.$invalid">Search</button>
+                  </span>
+              </div>
+          </form>
+
+          <div id="map"></div>
+
+      </div>
+    <div class="selectBox" ng-controller="mainCtrl as mCtrl">
+      <label for="cars">Please select your electric car: </label>
+      <select ng-model="selectedCar" ng-options="car as car.vehicleMake +' '+car.vehicleModel + ' '+car.vehicleSpec for car in mCtrl.listOfCars" class="selectBox" ng-change="mCtrl.select_car(selectedCar)"></select>
+
+      <h3>Your car: {{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
+
+      <div id="direction-panel" class="animated slideInUp"></div>
+
+      <ul>
+        <li ng-repeat="item in mCtrl.list | filter:search">
+          Name: {{item.name}} - Location: {{item.location}}
+        </li>
+      </ul>
+    </div>
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiIT-vZnJLlI1faDYfWa-9N-vyZ4JL4Vg&libraries=places"></script>
+
+  </body>
+</html>
