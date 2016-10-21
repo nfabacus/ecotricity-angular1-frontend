@@ -30,7 +30,7 @@
 
       <label for="cars">Please select your electric car: </label>
       <select ng-model="selectedCar" ng-options="car as car.vehicleMake +' '+car.vehicleModel + ' '+car.vehicleSpec for car in mCtrl.listOfCars" class="selectBox" ng-change="mCtrl.select_car(selectedCar)"></select>
-
+      <button ng-click="mCtrl.findMyLocation()">Find your location</button>
       <h3>Your car: {{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
 
       <div id="direction-panel" class="animated slideInUp"></div>
