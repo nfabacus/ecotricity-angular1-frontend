@@ -79,7 +79,7 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
   return o;
 }]);
 
-app.service('myMap', [function($q) {
+app.service('myMap', ['$q', function($q) {
     var o = {};
     o.init = function() {
       var centerOfUK = new google.maps.LatLng(55.378051,-3.435973);
@@ -111,8 +111,6 @@ app.service('myMap', [function($q) {
         });
         return d.promise;
     };
-
-    o.markers = [];
 
     o.create_marker = function(myLocatObj) {
       // if(o.marker) o.marker.setMap(null);
@@ -203,6 +201,7 @@ app.controller('mainCtrl',[
     function(chargingStations, myDetails, myMap, myCars ){
       var self = this;
       myMap.init();
+      self.searchedOrigin = {};
       self.findMyLocation = function(){
         myDetails.getMyCoords()
         .then(function setCoords(coordsData){
@@ -213,7 +212,26 @@ app.controller('mainCtrl',[
           myMap.create_marker(myDetails.myDetails);
         });
       };
-      self.search = function(){};
+      self.search = function(){
+        console.log("In controller, searchPlace:", self.searchPlace);
+        self.apiError = false;
+          myMap.search(self.searchPlace)
+          .then(
+              function(res) { // success
+                  console.log("search res:", res);
+                  self.searchedOrigin.name = res.name;
+                  self.searchedOrigin.latitude = res.geometry.location.lat();
+                  self.searchedOrigin.longitude = res.geometry.location.lng();
+                  myMap.center(self.searchedOrigin.latitude, self.searchedOrigin.longitude);
+                  myMap.create_marker(self.searchedOrigin);
+              },
+              function(status) { // error
+                  self.apiError = true;
+                  self.apiStatus = status;
+              }
+          );
+
+      };
 
       self.listOfCars = myCars.myCars;
       self.select_car = function(selectedCar){
