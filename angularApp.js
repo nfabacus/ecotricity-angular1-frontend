@@ -20,7 +20,7 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
 
   var o = {
     myDetails:{
-    "name": "My location",
+    "name": "",
     "latitude": "",
     "vehicleMake": "",
     "vehicleModel": "",
@@ -80,100 +80,152 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
 }]);
 
 app.service('myMap', ['$q', function($q) {
-    var o = {};
-    o.init = function() {
-      var centerOfUK = new google.maps.LatLng(55.378051,-3.435973);
-      var mapCanvas = document.getElementById("map");
-      var options = {
-          center: centerOfUK,
-          zoom: 6,
-          disableDefaultUI: true
-      };
-      o.map = new google.maps.Map(mapCanvas, options);
-      o.directionsService = new google.maps.DirectionsService;
-      o.directionsDisplay = new google.maps.DirectionsRenderer;
-      o.places = new google.maps.places.PlacesService(o.map);
-
+  var o = {};
+  o.init = function() {
+    var centerOfUK = new google.maps.LatLng(55.378051,-3.435973);
+    var mapCanvas = document.getElementById("map");
+    var options = {
+        center: centerOfUK,
+        zoom: 6,
+        disableDefaultUI: true
     };
+    o.map = new google.maps.Map(mapCanvas, options);
+    o.directionsService = new google.maps.DirectionsService;
+    o.directionsDisplay = new google.maps.DirectionsRenderer;
+    o.places = new google.maps.places.PlacesService(o.map);
 
-    o.center = function(latitude, longitude){
-      //zoom map and center it to my location.
-      o.map.setZoom(9);
-      o.map.setCenter({lat: latitude, lng: longitude});
-    };
-    o.search = function(str) {
-        var d = $q.defer();
-        o.places.textSearch({query: str}, function(results, status) {
-            if (status == 'OK') {
-                d.resolve(results[0]);
-            }
-            else d.reject(status);
-        });
-        return d.promise;
-    };
+  };
 
-    o.create_marker = function(myLocatObj) {
-      // if(o.marker) o.marker.setMap(null);
-        var infoWindow = new google.maps.InfoWindow();
-        var marker = new google.maps.Marker({
-            map: o.map,
-            position: new google.maps.LatLng(myLocatObj.latitude, myLocatObj.longitude),
-            animation: google.maps.Animation.DROP,
-            title: myLocatObj.name
-        });
+  o.center = function(latitude, longitude){
+    //zoom map and center it to my location.
+    o.map.setZoom(9);
+    o.map.setCenter({lat: latitude, lng: longitude});
+  };
+  o.textSearch = function(str) {
+      var deferred = $q.defer();
+      o.places.textSearch({query: str}, function(results, status) {
+          if (status == 'OK') {
+              deferred.resolve(results[0]);
+          }
+          else deferred.reject(status);
+      });
+      return deferred.promise;
+  };
 
-        // Create & place an info window for the location.
-          var contentStr = '<div class="infowindow">';
-          // if (message) {
-          //   contentStr +=message+'<br>';
-          // }
-          // if (myLocatObj.name) {
-          //   contentStr +='<h2 class="narrow">'+myLocatObj.name+'</h2>';
-          // }
-          if (myLocatObj.pumpModel) {
-            contentStr +='<h4 class="narrow">'+myLocatObj.pumpModel+'</h4>';
-          }
-          if (myLocatObj.location) {
-            contentStr +='<h3 class="narrow">'+myLocatObj.location+'</h3>';
-          }
-          if (myLocatObj.postcode) {
-            contentStr +='<h3 class="narrow">'+myLocatObj.postcode+'</h3>';
-          }
-          if (myLocatObj.distance) {
-            contentStr +='<h3 class="narrow">Distance: '+(myLocatObj.distance).toFixed(1)+' Miles</h3>';
-          }
-          if (myLocatObj.postcode) {
-            contentStr +='<button id="getDirectionBtn" class="btn">Get Directions</button><br/>';
-          }
-        marker.content = contentStr;
+  o.select_markerIcon = function(pumpModel){
+    console.log("pumbModel:", pumpModel);
+    var iconImg ="";
+    switch(pumpModel) {
+      case "DC (CHAdeMO) / CCS":
+        iconImg = "library/images/pin-acdc-dc.png";
+        break;
+      case "AC (RAPID) / DC (CHAdeMO)":
+        iconImg = "library/images/pin-dcac-ac.png";
+        break;
+        case "AC (RAPID)":
+          iconImg = "library/images/pin-ac.png";
+          break;
+      case "AC (Medium)":
+        iconImg = "library/images/pin-ac.png";
+        break;
+      case "DC (CHAdeMO)":
+        iconImg = "library/images/pin-acdc.png";
+        break;
+      case "CCS":
+        iconImg = "library/images/pin-dc.png";
+        break;
+      default:
+    }
+    return iconImg;
+  };
 
-        google.maps.event.addListener(marker, 'click', function(){
-            infoWindow.setContent('<h2>' + marker.title + '</h2>' +
-              marker.content);
-            infoWindow.open(o.map, marker);
-        });
-    };
+  o.create_marker = function(myLocatObj) {
+    // if(o.marker) o.marker.setMap(null);
+      var infoWindow = new google.maps.InfoWindow();
+      var marker = new google.maps.Marker({
+          map: o.map,
+          position: new google.maps.LatLng(myLocatObj.latitude, myLocatObj.longitude),
+          animation: google.maps.Animation.DROP,
+          title: myLocatObj.name,
+          icon: myLocatObj.markerIcon
+      });
 
-    o.place_markers = function(locations) {
-      o.markers = [];
-      // o.directionsDisplay.setMap(null);
-      console.log("locations for markers:", locations);
-      locations.forEach(function(locationObj){
+      // Create & place an info window for the location.
+        var contentStr = '<div class="infowindow">';
+        // if (message) {
+        //   contentStr +=message+'<br>';
+        // }
+        // if (myLocatObj.name) {
+        //   contentStr +='<h2 class="narrow">'+myLocatObj.name+'</h2>';
+        // }
+        if (myLocatObj.pumpModel) {
+          contentStr +='<h4 class="narrow">'+myLocatObj.pumpModel+'</h4>';
+        }
+        if (myLocatObj.location) {
+          contentStr +='<h3 class="narrow">'+myLocatObj.location+'</h3>';
+        }
+        if (myLocatObj.postcode) {
+          contentStr +='<h3 class="narrow">'+myLocatObj.postcode+'</h3>';
+        }
+        if (myLocatObj.distance) {
+          contentStr +='<h3 class="narrow">Distance: '+(myLocatObj.distance).toFixed(1)+' Miles</h3>';
+        }
+        if (myLocatObj.postcode) {
+          contentStr +='<button id="getDirectionBtn" class="btn">Get Directions</button><br/>';
+        }
+      marker.content = contentStr;
+
+      google.maps.event.addListener(marker, 'click', function(){
+          infoWindow.setContent('<h2>' + marker.title + '</h2>' +
+            marker.content);
+          infoWindow.open(o.map, marker);
+      });
+    return marker;
+  };
+
+  // o.myLocMarker = {};
+  o.markers = [];
+  o.place_myLocMarker = function(location){
+    if(o.myLocMarker) {
+      o.clear_marker(o.myLocMarker);
+      o.clear_markers(o.markers);
+    }
+    o.myLocMarker = o.create_marker(location);
+  };
+
+  o.clear_marker = function(marker){
+    marker.setMap(null);
+  };
+  o.clear_markers = function(markers){
+    markers.forEach(function(marker){
+      o.clear_marker(marker);
+    });
+    o.markers = [];
+  };
+
+  o.create_markers = function(locations) {
+    console.log("create_markers executed.");
+    o.clear_markers(o.markers);
+    //o.directionsDisplay.setMap(null);
+    console.log("locations for markers:", locations);
+    locations.forEach(function(locationObj){
       console.log("location for each marker:", locationObj);
-      o.create_marker(locationObj);
+      locationObj.markerIcon = o.select_markerIcon(locationObj.pumpModel);
+      var marker = o.create_marker(locationObj);
+
       o.markers.push(marker);
     });
-    };
-
+  };
   return o;
 }]);
 
-app.factory('chargingStations', ['$http', function($http){
+app.factory('chargingStations', ['$q','$http', function($q, $http){
   var o = {
     chargingStations: []
   };
 
   o.getAll = function(myCarData) {
+    var deferred = $q.defer();
     var settings = {
       "async": true,
       "crossDomain": true,
@@ -186,12 +238,14 @@ app.factory('chargingStations', ['$http', function($http){
       },
       "data": $.param(myCarData)
     };
-    return $http(settings).then(function(data){
+    $http(settings).then(function(data){
       console.log("response:", data.data.result);
-      angular.copy(data.data.result, o.chargingStations);
+      deferred.resolve(data.data.result);
     }, function(err){
+      deferred.reject();
       console.log("error", err);
     });
+    return deferred.promise;
   };
   return o;
 }]);
@@ -201,29 +255,30 @@ app.controller('mainCtrl',[
     function(chargingStations, myDetails, myMap, myCars ){
       var self = this;
       myMap.init();
-      self.searchedOrigin = {};
+      // self.searchedOrigin = {};
       self.findMyLocation = function(){
         myDetails.getMyCoords()
         .then(function setCoords(coordsData){
           console.log(coordsData);
+          myDetails.myDetails.name = "My location";
           myDetails.myDetails.latitude = coordsData.latitude;
           myDetails.myDetails.longitude = coordsData.longitude;
           myMap.center(coordsData.latitude, coordsData.longitude);
-          myMap.create_marker(myDetails.myDetails);
+          myMap.place_myLocMarker(myDetails.myDetails);
         });
       };
       self.search = function(){
         console.log("In controller, searchPlace:", self.searchPlace);
         self.apiError = false;
-          myMap.search(self.searchPlace)
+          myMap.textSearch(self.searchPlace)
           .then(
               function(res) { // success
-                  console.log("search res:", res);
-                  self.searchedOrigin.name = res.name;
-                  self.searchedOrigin.latitude = res.geometry.location.lat();
-                  self.searchedOrigin.longitude = res.geometry.location.lng();
-                  myMap.center(self.searchedOrigin.latitude, self.searchedOrigin.longitude);
-                  myMap.create_marker(self.searchedOrigin);
+                  myDetails.myDetails.name = res.name;
+                  myDetails.myDetails.latitude = res.geometry.location.lat();
+                  myDetails.myDetails.longitude = res.geometry.location.lng();
+
+                  myMap.center(myDetails.myDetails.latitude, myDetails.myDetails.longitude);
+                  myMap.place_myLocMarker(myDetails.myDetails);
               },
               function(status) { // error
                   self.apiError = true;
@@ -244,7 +299,24 @@ app.controller('mainCtrl',[
         // myMap.place_markers(self.list);
       };
 
-      // chargingStations.getAll(myDetails);
-      // self.list = chargingStations.chargingStations;
+      self.findStations = function(){
+        self.apiError = false;
+        if(!myDetails.myDetails.name || !myDetails.myDetails.latitude || !myDetails.myDetails.longitude || !myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
+          console.log("clicked but some detail is missing");
+        } else {
+          chargingStations.getAll(myDetails.myDetails)
+          .then(
+            function(res) { //success
+              self.list = res;
+              angular.copy(res, chargingStations.chargingStations);
+              myMap.create_markers(chargingStations.chargingStations);
+            },
+            function(status) { // error
+              self.apiError = true;
+              self.apiStatus = status;
+            }
+          );
+        }
+      };
     }
 ]);
