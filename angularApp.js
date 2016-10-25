@@ -82,6 +82,8 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
 app.service('myMap', ['$q', function($q) {
   var o = {};
   o.init = function() {
+
+    o.markers = [];
     var centerOfUK = new google.maps.LatLng(55.378051,-3.435973);
     var mapCanvas = document.getElementById("map");
     var options = {
@@ -139,10 +141,10 @@ app.service('myMap', ['$q', function($q) {
     return iconImg;
   };
 
-  o.create_marker = function(locatObj, detailContent) {
+  o.create_marker = function(locatObj) {
+    locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
     console.log("In create_marker,");
     console.log("locatObj:", locatObj);
-    console.log("detailContent:", detailContent);
     // if(o.marker) o.marker.setMap(null);
       var infoWindow = new google.maps.InfoWindow();
       var marker = new google.maps.Marker({
@@ -162,6 +164,7 @@ app.service('myMap', ['$q', function($q) {
         //   contentStr +='<h2 class="narrow">'+locatObj.name+'</h2>';
         // }
         if (locatObj.pumpModel) {
+          // locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
           contentStr +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
         }
         if (locatObj.location) {
@@ -176,8 +179,23 @@ app.service('myMap', ['$q', function($q) {
         if (locatObj.postcode) {
           contentStr +='<button id="getDirectionBtn" class="btn">Get Directions</button><br/>';
         }
-        if (detailContent){
-          contentStr += detailContent;
+        if (locatObj.pumpDetails){
+          locatObj.pumpDetails.forEach(function(pumpObj){
+            var pumpStr ="<div class='pumpDiv'>"
+            pumpObj.connector.forEach(function(connector){
+              var connectorStr =
+                "<div class='connectorDiv'>"+
+                "<img src='"+o.select_markerIcon(connector.type)+"' />"+
+                "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
+                "<p>Compatibility with your car: "+connector.compatible+"</p>"+
+                "<p>Availability: "+connector.status+"</p>"+
+                "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
+                "</div>";
+              pumpStr += connectorStr;
+            });
+              pumpStr +="</div>";
+              contentStr += pumpStr;
+          });
         }
 
       marker.content = contentStr;
@@ -190,8 +208,6 @@ app.service('myMap', ['$q', function($q) {
     return marker;
   };
 
-  // o.myLocMarker = {};
-  o.markers = [];
   o.place_myLocMarker = function(location){
     if(o.myLocMarker) {
       o.clear_marker(o.myLocMarker);
@@ -208,64 +224,6 @@ app.service('myMap', ['$q', function($q) {
       o.clear_marker(marker);
     });
     o.markers = [];
-  };
-
-  o.create_markers = function(chargingStatObj, mydetails) {
-    var stations = chargingStatObj.chargingStations;
-    console.log("create_markers executed.");
-    o.clear_markers(o.markers);
-    //o.directionsDisplay.setMap(null);
-    console.log("locations for markers:", stations);
-    var contentStr ="";
-    stations.forEach(function(locatObj){
-      console.log("location for each marker:", locatObj);
-
-      locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
-      console.log("pumpDetails for each marker:", locatObj);
-      console.log("pumpDetails for each marker:", locatObj.pumpDetails[0]);
-      var stationPumps = locatObj.pumpDetails;
-      stationPumps.forEach(function(pumpObj){
-            pumpObj.connector.forEach(function(connector){
-              var connectorStr =
-                "<div class='connectorDiv'>"+
-                "<img src='"+select_iconImg(connector.type)+"' />"+
-                "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
-                "<p>Compatibility with your car: "+connector.compatible+"</p>"+
-                "<p>Availability: "+connector.status+"</p>"+
-                "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
-                "</div>";
-              contentStr += connectorStr;
-            });
-          });
-      //  chargingStatObj.get_pumpDetails(locatObj, mydetails).then(
-      //   function(stationPumps){
-      //       var contentStr="";
-      //       console.log("in get_pumpDetals, stationPumps", stationPumps);
-      //       stationPumps.forEach(function(pumpObj){
-      //         pumpObj.connector.forEach(function(connector){
-      //           var connectorStr =
-      //             "<div class='connectorDiv'>"+
-      //             "<img src='"+locatObj.markerIcon+"' />"+
-      //             "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
-      //             "<p>Compatibility with your car: "+connector.compatible+"</p>"+
-      //             "<p>Availability: "+connector.status+"</p>"+
-      //             "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
-      //             "</div>";
-      //           contentStr += connectorStr;
-      //         });
-      //       });
-        //     return contentStr;
-        // },
-        // function(status) {
-        //   self.apiError = true;
-        //   self.apiStatus = status;
-        // }
-      // );
-
-      var marker = o.create_marker(locatObj, contentStr);
-
-      o.markers.push(marker);
-    });
   };
   return o;
 }]);
@@ -416,10 +374,14 @@ app.controller('mainCtrl',[
               chargingStations.chargingStations.forEach(function(station, index){
                 chargingStations.get_pumpDetails(station, myDetails.myDetails).then(
                   function(res) {
+                    chargingStations.chargingStations[index].pumpDetails = res;
+
                     console.log("index", index);
                     console.log("charginStations.charginStations[index]:", chargingStations.chargingStations[index]);
                     console.log("res", res);
-                    chargingStations.chargingStations[index].pumpDetails = res;
+                    var marker = myMap.create_marker(chargingStations.chargingStations[index]);
+                    myMap.markers.push(marker);
+
                   },
                   function(status) { // error
                     self.apiError = true;
@@ -428,8 +390,6 @@ app.controller('mainCtrl',[
                 );
 
               });
-
-              myMap.create_markers(chargingStations, myDetails.myDetails);
             },
             function(status) { // error
               self.apiError = true;

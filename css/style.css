@@ -67,6 +67,11 @@ ul {
   background-color: #CDDC39;
 }
 
+.pumpDiv {
+  background-color: red;
+}
+
+
 /*Style for direction panel*/
 #direction-panel {
   width: 80%;
