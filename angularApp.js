@@ -222,7 +222,7 @@ app.service('myMap', ['$q', function($q) {
 
       locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
       console.log("pumpDetails for each marker:", locatObj);
-      console.log("pumpDetails for each marker:", locatObj.pumpDetails);
+      console.log("pumpDetails for each marker:", locatObj.pumpDetails[0]);
       var stationPumps = locatObj.pumpDetails;
       stationPumps.forEach(function(pumpObj){
             pumpObj.connector.forEach(function(connector){
