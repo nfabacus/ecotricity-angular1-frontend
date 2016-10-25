@@ -139,15 +139,18 @@ app.service('myMap', ['$q', function($q) {
     return iconImg;
   };
 
-  o.create_marker = function(myLocatObj) {
+  o.create_marker = function(locatObj, detailContent) {
+    console.log("In create_marker,");
+    console.log("locatObj:", locatObj);
+    console.log("detailContent:", detailContent);
     // if(o.marker) o.marker.setMap(null);
       var infoWindow = new google.maps.InfoWindow();
       var marker = new google.maps.Marker({
           map: o.map,
-          position: new google.maps.LatLng(myLocatObj.latitude, myLocatObj.longitude),
+          position: new google.maps.LatLng(locatObj.latitude, locatObj.longitude),
           animation: google.maps.Animation.DROP,
-          title: myLocatObj.name,
-          icon: myLocatObj.markerIcon
+          title: locatObj.name,
+          icon: locatObj.markerIcon
       });
 
       // Create & place an info window for the location.
@@ -155,24 +158,28 @@ app.service('myMap', ['$q', function($q) {
         // if (message) {
         //   contentStr +=message+'<br>';
         // }
-        // if (myLocatObj.name) {
-        //   contentStr +='<h2 class="narrow">'+myLocatObj.name+'</h2>';
+        // if (locatObj.name) {
+        //   contentStr +='<h2 class="narrow">'+locatObj.name+'</h2>';
         // }
-        if (myLocatObj.pumpModel) {
-          contentStr +='<h4 class="narrow">'+myLocatObj.pumpModel+'</h4>';
+        if (locatObj.pumpModel) {
+          contentStr +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
         }
-        if (myLocatObj.location) {
-          contentStr +='<h3 class="narrow">'+myLocatObj.location+'</h3>';
+        if (locatObj.location) {
+          contentStr +='<h3 class="narrow">'+locatObj.location+'</h3>';
         }
-        if (myLocatObj.postcode) {
-          contentStr +='<h3 class="narrow">'+myLocatObj.postcode+'</h3>';
+        if (locatObj.postcode) {
+          contentStr +='<h3 class="narrow">'+locatObj.postcode+'</h3>';
         }
-        if (myLocatObj.distance) {
-          contentStr +='<h3 class="narrow">Distance: '+(myLocatObj.distance).toFixed(1)+' Miles</h3>';
+        if (locatObj.distance) {
+          contentStr +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
         }
-        if (myLocatObj.postcode) {
+        if (locatObj.postcode) {
           contentStr +='<button id="getDirectionBtn" class="btn">Get Directions</button><br/>';
         }
+        if (detailContent){
+          contentStr += detailContent;
+        }
+
       marker.content = contentStr;
 
       google.maps.event.addListener(marker, 'click', function(){
@@ -203,15 +210,59 @@ app.service('myMap', ['$q', function($q) {
     o.markers = [];
   };
 
-  o.create_markers = function(locations) {
+  o.create_markers = function(chargingStatObj, mydetails) {
+    var stations = chargingStatObj.chargingStations;
     console.log("create_markers executed.");
     o.clear_markers(o.markers);
     //o.directionsDisplay.setMap(null);
-    console.log("locations for markers:", locations);
-    locations.forEach(function(locationObj){
-      console.log("location for each marker:", locationObj);
-      locationObj.markerIcon = o.select_markerIcon(locationObj.pumpModel);
-      var marker = o.create_marker(locationObj);
+    console.log("locations for markers:", stations);
+    var contentStr ="";
+    stations.forEach(function(locatObj){
+      console.log("location for each marker:", locatObj);
+
+      locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
+      console.log("pumpDetails for each marker:", locatObj);
+      console.log("pumpDetails for each marker:", locatObj.pumpDetails);
+      var stationPumps = locatObj.pumpDetails;
+      stationPumps.forEach(function(pumpObj){
+            pumpObj.connector.forEach(function(connector){
+              var connectorStr =
+                "<div class='connectorDiv'>"+
+                "<img src='"+select_iconImg(connector.type)+"' />"+
+                "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
+                "<p>Compatibility with your car: "+connector.compatible+"</p>"+
+                "<p>Availability: "+connector.status+"</p>"+
+                "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
+                "</div>";
+              contentStr += connectorStr;
+            });
+          });
+      //  chargingStatObj.get_pumpDetails(locatObj, mydetails).then(
+      //   function(stationPumps){
+      //       var contentStr="";
+      //       console.log("in get_pumpDetals, stationPumps", stationPumps);
+      //       stationPumps.forEach(function(pumpObj){
+      //         pumpObj.connector.forEach(function(connector){
+      //           var connectorStr =
+      //             "<div class='connectorDiv'>"+
+      //             "<img src='"+locatObj.markerIcon+"' />"+
+      //             "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
+      //             "<p>Compatibility with your car: "+connector.compatible+"</p>"+
+      //             "<p>Availability: "+connector.status+"</p>"+
+      //             "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
+      //             "</div>";
+      //           contentStr += connectorStr;
+      //         });
+      //       });
+        //     return contentStr;
+        // },
+        // function(status) {
+        //   self.apiError = true;
+        //   self.apiStatus = status;
+        // }
+      // );
+
+      var marker = o.create_marker(locatObj, contentStr);
 
       o.markers.push(marker);
     });
@@ -238,6 +289,7 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
       },
       "data": $.param(myCarData)
     };
+    console.log("getAll param data:", settings.data);
     $http(settings).then(function(data){
       console.log("response:", data.data.result);
       deferred.resolve(data.data.result);
@@ -247,6 +299,56 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
     });
     return deferred.promise;
   };
+
+  o.get_pumpDetails = function(locatObj, mydetails){
+    console.log("locatObj:", locatObj);
+    console.log("mydetails:", mydetails);
+    var contentStr;
+    var deferred = $q.defer();
+    var settings = {
+      "async": true,
+      "crossDomain": true,
+      "url": "https://www.ecotricity.co.uk/api/ezx/v1/getLocationDetails",
+      "method": "POST",
+      "headers": {
+        "content-type": "application/x-www-form-urlencoded",
+        "cache-control": "no-cache",
+        "postman-token": "10b6d71a-a038-1043-76cf-d80c5aa3005f"
+      },
+      "data": $.param({
+        vehicleSpecification: mydetails.vehicleSpec,
+        vehicleModel: mydetails.vehicleModel,
+        locationId: locatObj.locationId,
+        vehicleMake: mydetails.vehicleMake
+      })
+    };
+    $http(settings).then(function(data){
+      console.log("response for pump details:", data.data.result.pump);
+      deferred.resolve(data.data.result.pump);
+    }, function(err){
+      deferred.reject();
+      console.log("error", err);
+    });
+    return deferred.promise;
+  };
+    //   var stationPumps = data.result.pump;
+    //   stationPumps.forEach(function(pumpObj){
+    //     pumpObj.connector.forEach(function(connector){
+    //       var connectorStr =
+    //         "<div class='connectorDiv'>"+
+    //         "<img src='"+locatObj.markerIcon+"' />"+
+    //         "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
+    //         "<p>Compatibility with your car: "+connector.compatible+"</p>"+
+    //         "<p>Availability: "+connector.status+"</p>"+
+    //         "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
+    //         "</div>";
+    //       contentStr += connectorStr;
+    //     });
+    //   });
+      // return contentStr;
+      // display_infowindow(locatObj, mydetails, map, marker, contentStr);
+    // });
+  // };
   return o;
 }]);
 
@@ -309,7 +411,25 @@ app.controller('mainCtrl',[
             function(res) { //success
               self.list = res;
               angular.copy(res, chargingStations.chargingStations);
-              myMap.create_markers(chargingStations.chargingStations);
+              console.log("in getAll, chargingStations:", chargingStations.chargingStations);
+              console.log("myMap:", myMap);
+              chargingStations.chargingStations.forEach(function(station, index){
+                chargingStations.get_pumpDetails(station, myDetails.myDetails).then(
+                  function(res) {
+                    console.log("index", index);
+                    console.log("charginStations.charginStations[index]:", chargingStations.chargingStations[index]);
+                    console.log("res", res);
+                    chargingStations.chargingStations[index].pumpDetails = res;
+                  },
+                  function(status) { // error
+                    self.apiError = true;
+                    self.apiStatus = status;
+                  }
+                );
+
+              });
+
+              myMap.create_markers(chargingStations, myDetails.myDetails);
             },
             function(status) { // error
               self.apiError = true;
