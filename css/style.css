@@ -23,13 +23,70 @@ body {
   height:600px;
 }
 
+.inline {
+  display: inline-block;
+}
+
+select, input {
+  border: 0px;
+  margin: 10px;
+  box-shadow: 5px 5px 5px #888888;
+  border-radius: 5px;
+  font-family: 'Gloria Hallelujah', cursive;
+  color: #302530;
+  font-size: 22px;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+}
+
+/*Style for speech bubble*/
+blockquote.bubble {
+	background-position: center;
+  background-repeat: no-repeat !important;
+	background-size: 100% 100%;
+  margin: 0 auto;
+	text-align: center;
+	height: 0;
+	box-sizing: content-box;
+	line-height: 1;
+  font-size: 3.5vw;
+  /*z-index: 1;*/
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+blockquote.speech {
+  background: url(../../library/images/speech-bubble2.svg);
+  /*width: 25%;*/
+  padding: 5% 5% 15% 5%;
+}
+
+.pulsate {
+  animation: fadeIn 1s infinite alternate;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+}
+.fadesOut {
+  opacity: 1;
+  animation: fadeOut 2.5s forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to {
+    opacity: 0;
+  }
+}
+
 /*Style for menuBox*/
 .menuBox {
   font-size: 25px;
   background-color: rgba(205, 220, 57, 0.64);
   padding: 20px;
   border-radius: 10px;
-  z-index: 1;
+  /*z-index: 1;*/
   width: 85%;
   height: 80%;
   overflow: auto;
@@ -53,8 +110,6 @@ ul {
   margin: 10px;
   text-align: left;
 }
-
-
 
 /*style for info window*/
 .narrow {

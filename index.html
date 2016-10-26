@@ -11,44 +11,49 @@
   </head>
   <body >
     <div id="container">
-  			<div class="brandDiv">
-  				<img class="logo" src="library/images/ecotricity-logo-large.jpg" alt="Ecotricity Logo" />
-  				<img class="strapline" src="library/images/britain-s-leading-green-energy-supplier.jpg" alt="Ecotricity Logo" />
+  			<div ng-class="brandDiv">
+  				<img ng-class="logo" src="library/images/ecotricity-logo-large.jpg" alt="Ecotricity Logo" />
+  				<img ng-class="strapline" src="library/images/britain-s-leading-green-energy-supplier.jpg" alt="Ecotricity Logo" />
   			</div>
       <div ng-controller="mainCtrl as mCtrl">
 
         <div id="map"></div>
-        <div class="menuBox">
+        <div ng-if="!mCtrl.mapMode" class="menuBox">
           <h2>Electric Highway Finder</h2>
           <div id="instruction"></div>
 
           <label for="cars">1. Please select your electric car: </label>
-          <select ng-model="selectedCar" ng-options="car as car.vehicleMake +' '+car.vehicleModel + ' '+car.vehicleSpec for car in mCtrl.listOfCars" class="selectBox" ng-change="mCtrl.select_car(selectedCar)"></select>
-          <h3>Your car: {{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
+          <select ng-model="selectedCar" ng-options="car as car.vehicleMake +' '+car.vehicleModel + ' '+car.vehicleSpec for car in mCtrl.listOfCars" ng-change="mCtrl.select_car(selectedCar)"></select>
+          <h3>{{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
           <p>2. Where do you want to start from?</p>
           <button class="btn" ng-click="mCtrl.findMyLocation()">Where I am now</button>
-           OR <form name="searchForm" novalidate
+           OR <form ng-class="inline" name="searchForm" novalidate
           ng-submit="mCtrl.search()">
 
                 Type in your location:
-                  <input name="place" type="text" ng-model="mCtrl.searchPlace" required autofocus />
+                  <input ng-class="inputBox" name="place" type="text" ng-model="mCtrl.searchPlace" required autofocus />
                   {{searchPlace}}
                   <span >
-                      <button class="btn" ng-disabled="searchForm.$invalid"> > </button>
+                      <button class="btn" ng-disabled="searchForm.$invalid">Go!</button>
                   </span>
               </div>
           </form>
-          <p>3. Find Charging Stations Near You</p>
-          <button class="btn" ng-click="mCtrl.findStations()">Find</button>
+
           <div id="direction-panel" class="animated slideInUp"></div>
 
+          <ul>
+            <li ng-repeat="item in mCtrl.list">
+              Name: {{item.name}} - Location: {{item.location}}
+            </li>
+          </ul>
+        <blockquote ng-if="mCtrl.message != null"  ng-class="mCtrl.loading ? 'speech bubble pulsate' : 'speech bubble fadesOut'">{{mCtrl.message}}</blockquote>
         </div>
-        <ul>
-          <li ng-repeat="item in mCtrl.list">
-            Name: {{item.name}} - Location: {{item.location}}
-          </li>
-        </ul>
+        <p>Search again with another car and/or location.</p>
+        <button class="btn" ng-click="mCtrl.findStations()">Go!</button>
+
+
       </div>
+
     </div>
 		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiIT-vZnJLlI1faDYfWa-9N-vyZ4JL4Vg&libraries=places"></script>
 

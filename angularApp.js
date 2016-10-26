@@ -276,41 +276,73 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
 }]);
 
 app.controller('mainCtrl',[
-    'chargingStations', 'myDetails', 'myMap', 'myCars',
-    function(chargingStations, myDetails, myMap, myCars ){
+    'chargingStations', 'myDetails', 'myMap', 'myCars', '$timeout',
+    function(chargingStations, myDetails, myMap, myCars, $timeout ){
       var self = this;
+      self.loading = false;
       myMap.init();
       $('.menuBox').scrollTop(0);
       // self.searchedOrigin = {};
       self.findMyLocation = function(){
-        myDetails.getMyCoords()
-        .then(function setCoords(coordsData){
-          console.log(coordsData);
-          myDetails.myDetails.name = "My location";
-          myDetails.myDetails.latitude = coordsData.latitude;
-          myDetails.myDetails.longitude = coordsData.longitude;
-          myMap.center(coordsData.latitude, coordsData.longitude);
-          myMap.place_myLocMarker(myDetails.myDetails);
-        });
+        if(!myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
+          self.message = "Please select your car first.";
+          $timeout(function(){
+            self.message = null;
+          }, 2000);
+        } else {
+          self.message = "Finding your location...";
+          self.loading = true;
+          myDetails.getMyCoords()
+          .then(
+            function setCoords(coordsData){ //success
+              console.log(coordsData);
+              self.message = "Got your location.";
+              self.loading = false;
+              myDetails.myDetails.name = "My location";
+              myDetails.myDetails.latitude = coordsData.latitude;
+              myDetails.myDetails.longitude = coordsData.longitude;
+              myMap.center(coordsData.latitude, coordsData.longitude);
+              myMap.place_myLocMarker(myDetails.myDetails);
+              $timeout(function(){
+                self.message = null;
+              }, 2000);
+              self.findStations();
+          });
+        }
       };
       self.search = function(){
-        console.log("In controller, searchPlace:", self.searchPlace);
-        self.apiError = false;
-          myMap.textSearch(self.searchPlace)
-          .then(
-              function(res) { // success
+        if(!myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
+          self.message = "Please select your car first.";
+          $timeout(function(){
+            self.message = null;
+          }, 2000);
+        } else {
+          self.message = "Finding your location...";
+          self.loading = true;
+          console.log("In controller, searchPlace:", self.searchPlace);
+          self.apiError = false;
+            myMap.textSearch(self.searchPlace)
+            .then(
+                function(res) { // success
+                  self.message = "Got your location.";
+                  self.loading = false;
                   myDetails.myDetails.name = res.name;
                   myDetails.myDetails.latitude = res.geometry.location.lat();
                   myDetails.myDetails.longitude = res.geometry.location.lng();
 
                   myMap.center(myDetails.myDetails.latitude, myDetails.myDetails.longitude);
                   myMap.place_myLocMarker(myDetails.myDetails);
-              },
-              function(status) { // error
-                  self.apiError = true;
-                  self.apiStatus = status;
-              }
-          );
+                  $timeout(function(){
+                    self.message = null;
+                  }, 2000);
+                  self.findStations();
+                },
+                function(status) { // error
+                    self.apiError = true;
+                    self.apiStatus = status;
+                }
+            );
+          }
       };
 
       self.listOfCars = myCars.myCars;
@@ -323,11 +355,20 @@ app.controller('mainCtrl',[
       self.findStations = function(){
         self.apiError = false;
         if(!myDetails.myDetails.name || !myDetails.myDetails.latitude || !myDetails.myDetails.longitude || !myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
-          console.log("clicked but some detail is missing");
+
+          self.message = "Please select your car and location first.";
+          $timeout(function(){
+            self.message = null;
+          }, 2000);
         } else {
+          self.mapMode = true;
+          self.message = "Searching 10 charging stations nearest to you...";
+          self.loading = true;
           chargingStations.getAll(myDetails.myDetails)
           .then(
             function(res) { //success
+              self.message = "Found 10 nearest charging stations.";
+              self.loading = false;
               self.list = res;
               angular.copy(res, chargingStations.chargingStations);
               console.log("in getAll, chargingStations:", chargingStations.chargingStations);
@@ -351,6 +392,9 @@ app.controller('mainCtrl',[
                 );
 
               });
+              $timeout(function(){
+                self.message = null;
+              }, 2500);
             },
             function(status) { // error
               self.apiError = true;
