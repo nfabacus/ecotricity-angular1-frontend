@@ -39,23 +39,15 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
   o.getMyCoords = function(){
     var deferred = $q.defer();
 
-    // var instructionEl = document.getElementById("instruction");
-
     if (navigator.geolocation) {
       console.log("Finding your location...");
-      // instructionEl.innerHTML = "<span class='animated fadeIn'>Finding your location...</span>";
-    navigator.geolocation.getCurrentPosition(showPosition, showError);
+      navigator.geolocation.getCurrentPosition(showPosition, showError);
     } else {
-        console.log("Geolocation is not supported by this browser.");
-        // instructionEl.innerHTML = "Geolocation is not supported by this browser.";
+      console.log("Geolocation is not supported by this browser.");
     }
     function showPosition(position){
       console.log("your coords found:", position.coords);
       deferred.resolve(position.coords);
-      // console.log("latlng:", position.coords.latitude+ " " + position.coords.longitude );
-      // o.myDetails.latitude = position.coords.latitude;
-      // o.myDetails.longitude = position.coords.longitude;
-      // instructionEl.innerHTML = "<span class='animated fadeIn'>Got your location.</span>";
     }
     function showError(error) {
       deferred.reject();
@@ -95,11 +87,9 @@ app.service('myMap', ['$q', function($q) {
     o.directionsService = new google.maps.DirectionsService;
     o.directionsDisplay = new google.maps.DirectionsRenderer;
     o.places = new google.maps.places.PlacesService(o.map);
-
   };
 
   o.center = function(latitude, longitude){
-    //zoom map and center it to my location.
     o.map.setZoom(9);
     o.map.setCenter({lat: latitude, lng: longitude});
   };
@@ -145,66 +135,59 @@ app.service('myMap', ['$q', function($q) {
     locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
     console.log("In create_marker,");
     console.log("locatObj:", locatObj);
-    // if(o.marker) o.marker.setMap(null);
-      var infoWindow = new google.maps.InfoWindow();
-      var marker = new google.maps.Marker({
+    var infoWindow = new google.maps.InfoWindow();
+    var marker = new google.maps.Marker({
           map: o.map,
           position: new google.maps.LatLng(locatObj.latitude, locatObj.longitude),
           animation: google.maps.Animation.DROP,
           title: locatObj.name,
           icon: locatObj.markerIcon
+    });
+
+    // Create & place an info window for the location.
+    var contentStr = '<div class="infowindow">';
+
+    if (locatObj.pumpModel) {
+      contentStr +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
+    }
+    if (locatObj.location) {
+      contentStr +='<h3 class="narrow">'+locatObj.location+'</h3>';
+    }
+    if (locatObj.postcode) {
+      contentStr +='<h3 class="narrow">'+locatObj.postcode+'</h3>';
+    }
+    if (locatObj.distance) {
+      contentStr +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
+    }
+    if (locatObj.postcode) {
+      contentStr +='<button id="getDirectionBtn" class="btn">Get Directions</button><br/>';
+    }
+    if (locatObj.pumpDetails){
+      locatObj.pumpDetails.forEach(function(pumpObj){
+        var pumpStr ="<div class='pumpDiv'>"
+        pumpObj.connector.forEach(function(connector){
+          var connectorStr =
+            "<div class='connectorDiv'>"+
+            "<img src='"+o.select_markerIcon(connector.type)+"' />"+
+            "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
+            "<p>Compatibility with your car: "+connector.compatible+"</p>"+
+            "<p>Availability: "+connector.status+"</p>"+
+            "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
+            "</div>";
+          pumpStr += connectorStr;
+        });
+          pumpStr +="</div>";
+          contentStr += pumpStr;
       });
+    }
 
-      // Create & place an info window for the location.
-        var contentStr = '<div class="infowindow">';
-        // if (message) {
-        //   contentStr +=message+'<br>';
-        // }
-        // if (locatObj.name) {
-        //   contentStr +='<h2 class="narrow">'+locatObj.name+'</h2>';
-        // }
-        if (locatObj.pumpModel) {
-          // locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
-          contentStr +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
-        }
-        if (locatObj.location) {
-          contentStr +='<h3 class="narrow">'+locatObj.location+'</h3>';
-        }
-        if (locatObj.postcode) {
-          contentStr +='<h3 class="narrow">'+locatObj.postcode+'</h3>';
-        }
-        if (locatObj.distance) {
-          contentStr +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
-        }
-        if (locatObj.postcode) {
-          contentStr +='<button id="getDirectionBtn" class="btn">Get Directions</button><br/>';
-        }
-        if (locatObj.pumpDetails){
-          locatObj.pumpDetails.forEach(function(pumpObj){
-            var pumpStr ="<div class='pumpDiv'>"
-            pumpObj.connector.forEach(function(connector){
-              var connectorStr =
-                "<div class='connectorDiv'>"+
-                "<img src='"+o.select_markerIcon(connector.type)+"' />"+
-                "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
-                "<p>Compatibility with your car: "+connector.compatible+"</p>"+
-                "<p>Availability: "+connector.status+"</p>"+
-                "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
-                "</div>";
-              pumpStr += connectorStr;
-            });
-              pumpStr +="</div>";
-              contentStr += pumpStr;
-          });
-        }
+    marker.content = contentStr;
 
-      marker.content = contentStr;
-
-      google.maps.event.addListener(marker, 'click', function(){
-          infoWindow.setContent('<h2>' + marker.title + '</h2>' +
-            marker.content);
-          infoWindow.open(o.map, marker);
-      });
+    google.maps.event.addListener(marker, 'click', function(){
+        infoWindow.setContent('<h2>' + marker.title + '</h2>' +
+          marker.content);
+        infoWindow.open(o.map, marker);
+    });
     return marker;
   };
 
@@ -289,24 +272,6 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
     });
     return deferred.promise;
   };
-    //   var stationPumps = data.result.pump;
-    //   stationPumps.forEach(function(pumpObj){
-    //     pumpObj.connector.forEach(function(connector){
-    //       var connectorStr =
-    //         "<div class='connectorDiv'>"+
-    //         "<img src='"+locatObj.markerIcon+"' />"+
-    //         "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
-    //         "<p>Compatibility with your car: "+connector.compatible+"</p>"+
-    //         "<p>Availability: "+connector.status+"</p>"+
-    //         "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
-    //         "</div>";
-    //       contentStr += connectorStr;
-    //     });
-    //   });
-      // return contentStr;
-      // display_infowindow(locatObj, mydetails, map, marker, contentStr);
-    // });
-  // };
   return o;
 }]);
 
@@ -315,6 +280,7 @@ app.controller('mainCtrl',[
     function(chargingStations, myDetails, myMap, myCars ){
       var self = this;
       myMap.init();
+      $('.menuBox').scrollTop(0);
       // self.searchedOrigin = {};
       self.findMyLocation = function(){
         myDetails.getMyCoords()
@@ -345,7 +311,6 @@ app.controller('mainCtrl',[
                   self.apiStatus = status;
               }
           );
-
       };
 
       self.listOfCars = myCars.myCars;
@@ -353,10 +318,6 @@ app.controller('mainCtrl',[
         console.log("myDetails:", myDetails);
         console.log("hello, in controller! selectedCar:", selectedCar);
         myDetails.set_car(selectedCar);
-        // myDetails.getMyCoords();
-        // chargingStations.getAll(myDetails.myDetails);
-        // self.list = chargingStations.chargingStations;
-        // myMap.place_markers(self.list);
       };
 
       self.findStations = function(){
