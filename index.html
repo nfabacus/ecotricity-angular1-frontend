@@ -11,13 +11,14 @@
   </head>
   <body >
     <div id="container">
-  			<div ng-class="brandDiv">
-  				<img ng-class="logo" src="library/images/ecotricity-logo-large.jpg" alt="Ecotricity Logo" />
-  				<img ng-class="strapline" src="library/images/britain-s-leading-green-energy-supplier.jpg" alt="Ecotricity Logo" />
-  			</div>
+			<div ng-class="brandDiv">
+				<img ng-class="logo" src="library/images/ecotricity-logo-large.jpg" alt="Ecotricity Logo" />
+				<img ng-class="strapline" src="library/images/britain-s-leading-green-energy-supplier.jpg" alt="Ecotricity Logo" />
+			</div>
       <div ng-controller="mainCtrl as mCtrl">
 
         <div id="map"></div>
+        <div ng-if="!mCtrl.mapMode" class="menuBoxBackground"></div>
         <div ng-if="!mCtrl.mapMode" class="menuBox">
           <h2>Electric Highway Finder</h2>
           <div id="instruction"></div>
@@ -27,34 +28,45 @@
           <h3>{{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
           <p>2. Where do you want to start from?</p>
           <button class="btn" ng-click="mCtrl.findMyLocation()">Where I am now</button>
-           OR <form ng-class="inline" name="searchForm" novalidate
+           OR
+          <form ng-class="inline" name="searchForm" novalidate
           ng-submit="mCtrl.search()">
 
-                Type in your location:
-                  <input ng-class="inputBox" name="place" type="text" ng-model="mCtrl.searchPlace" required autofocus />
+            Type in your location:
+            <input ng-class="inputBox" name="place" type="text" ng-model="mCtrl.searchPlace" required autofocus />
                   {{searchPlace}}
-                  <span >
-                      <button class="btn" ng-disabled="searchForm.$invalid">Go!</button>
-                  </span>
-              </div>
+            <span >
+              <button class="btn" ng-disabled="searchForm.$invalid">Go!</button>
+            </span>
           </form>
+        </div>
+
+        <h3 ng-if="mCtrl.list" class='animated fadeIn'>Here are the 10 charnging stations closest to you.</h3>
+        <p>Click each marker above or list below to see more details, including distance and directions.</p>
+
+        <ul id="chargingStations">
+          <li ng-repeat="item in mCtrl.list">
+            <a href="#" ng-click="mCtrl.open_InfoWindowByMarkerIndex($index)">{{$index+1}}: {{item.name}} - {{item.location}}, Distance: {{(item.distance).toFixed(1)+"miles"}}</a>
+          </li>
+        </ul>
+
+        <div id="chargingStationPanel" ng-if="mCtrl.stationPanelMode" >
+
+          <!-- titles and details,etc. -->
+          <h1>HELLO, Station Panel Mode is On.</h1>
+
+          <!-- new map with markers for user location and selected charging station -->
 
           <div id="direction-panel" class="animated slideInUp"></div>
-
-          <ul>
-            <li ng-repeat="item in mCtrl.list">
-              Name: {{item.name}} - Location: {{item.location}}
-            </li>
-          </ul>
-        <blockquote ng-if="mCtrl.message != null"  ng-class="mCtrl.loading ? 'speech bubble pulsate' : 'speech bubble fadesOut'">{{mCtrl.message}}</blockquote>
         </div>
+
         <p>Search again with another car and/or location.</p>
-        <button class="btn" ng-click="mCtrl.findStations()">Go!</button>
+        <button class="btn" ng-click="mCtrl.reset()">Reset!</button>
 
-
+        <blockquote ng-if="mCtrl.message != null"  ng-class="mCtrl.loading ? 'speech bubble pulsate' : 'speech bubble fadesOut'">{{mCtrl.message}}</blockquote>
       </div>
-
     </div>
+
 		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiIT-vZnJLlI1faDYfWa-9N-vyZ4JL4Vg&libraries=places"></script>
 
   </body>

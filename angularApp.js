@@ -71,11 +71,11 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
   return o;
 }]);
 
-app.service('myMap', ['$q', function($q) {
+app.service('myMap', ['$q', '$compile', function($q, $compile) {
   var o = {};
   o.init = function() {
-
     o.markers = [];
+    o.infoWindow = new google.maps.InfoWindow();
     var centerOfUK = new google.maps.LatLng(55.378051,-3.435973);
     var mapCanvas = document.getElementById("map");
     var options = {
@@ -135,7 +135,6 @@ app.service('myMap', ['$q', function($q) {
     locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
     console.log("In create_marker,");
     console.log("locatObj:", locatObj);
-    var infoWindow = new google.maps.InfoWindow();
     var marker = new google.maps.Marker({
           map: o.map,
           position: new google.maps.LatLng(locatObj.latitude, locatObj.longitude),
@@ -145,49 +144,59 @@ app.service('myMap', ['$q', function($q) {
     });
 
     // Create & place an info window for the location.
-    var contentStr = '<div class="infowindow">';
+    var content = '<div class="infowindow">';
+
+    if(locatObj.name){
+      content += '<h2>' + marker.title + '</h2>';
+    }
 
     if (locatObj.pumpModel) {
-      contentStr +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
+      content +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
     }
     if (locatObj.location) {
-      contentStr +='<h3 class="narrow">'+locatObj.location+'</h3>';
+      content +='<h3 class="narrow">'+locatObj.location+'</h3>';
     }
     if (locatObj.postcode) {
-      contentStr +='<h3 class="narrow">'+locatObj.postcode+'</h3>';
+      content +='<h3 class="narrow">'+locatObj.postcode+'</h3>';
     }
     if (locatObj.distance) {
-      contentStr +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
+      content +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
     }
     if (locatObj.postcode) {
-      contentStr +='<button id="getDirectionBtn" class="btn">Get Directions</button><br/>';
+      content +='<button ng-click="mCtrl.openStationPanel()">Details</button><br/>';
     }
-    if (locatObj.pumpDetails){
-      locatObj.pumpDetails.forEach(function(pumpObj){
-        var pumpStr ="<div class='pumpDiv'>"
-        pumpObj.connector.forEach(function(connector){
-          var connectorStr =
-            "<div class='connectorDiv'>"+
-            "<img src='"+o.select_markerIcon(connector.type)+"' />"+
-            "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
-            "<p>Compatibility with your car: "+connector.compatible+"</p>"+
-            "<p>Availability: "+connector.status+"</p>"+
-            "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
-            "</div>";
-          pumpStr += connectorStr;
-        });
-          pumpStr +="</div>";
-          contentStr += pumpStr;
-      });
-    }
+    // if (locatObj.pumpDetails){
+    //   locatObj.pumpDetails.forEach(function(pumpObj){
+    //     var pumpStr ="<div class='pumpDiv'>"
+    //     pumpObj.connector.forEach(function(connector){
+    //       var connectorStr =
+    //         "<div class='connectorDiv'>"+
+    //         "<img src='"+o.select_markerIcon(connector.type)+"' />"+
+    //         "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
+    //         "<p>Compatibility with your car: "+connector.compatible+"</p>"+
+    //         "<p>Availability: "+connector.status+"</p>"+
+    //         "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
+    //         "</div>";
+    //       pumpStr += connectorStr;
+    //     });
+    //       pumpStr +="</div>";
+    //       content += pumpStr;
+    //   });
+    // }
+    content +="</div>";
+    var compiled = $compile(content)(o);
 
-    marker.content = contentStr;
-
-    google.maps.event.addListener(marker, 'click', function(){
-        infoWindow.setContent('<h2>' + marker.title + '</h2>' +
-          marker.content);
-        infoWindow.open(o.map, marker);
+    google.maps.event.addListener(
+      marker,
+      'click',
+      function(){
+        // return function(){
+          // o.$apply();
+          o.infoWindow.setContent( compiled[0]);
+          o.infoWindow.open( o.map, marker );
+        // };//return fn()
     });
+
     return marker;
   };
 
@@ -244,7 +253,6 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
   o.get_pumpDetails = function(locatObj, mydetails){
     console.log("locatObj:", locatObj);
     console.log("mydetails:", mydetails);
-    var contentStr;
     var deferred = $q.defer();
     var settings = {
       "async": true,
@@ -276,13 +284,23 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
 }]);
 
 app.controller('mainCtrl',[
-    'chargingStations', 'myDetails', 'myMap', 'myCars', '$timeout',
-    function(chargingStations, myDetails, myMap, myCars, $timeout ){
+    'chargingStations', 'myDetails', 'myMap', 'myCars', '$timeout', function(chargingStations, myDetails, myMap, myCars, $timeout ){
       var self = this;
-      self.loading = false;
-      myMap.init();
-      $('.menuBox').scrollTop(0);
-      // self.searchedOrigin = {};
+      self.reset = function() {
+        self.loading = false;
+        self.message = null;
+        self.searchPlace = "";
+        self.list = null;
+        myDetails.myDetails = {};
+        chargingStations.chargingStations = [];
+        self.mapMode = false;
+        self.stationPanelMode = false;
+        myMap.init();
+        $('body').scrollTop(0);
+        $('.menuBox').scrollTop(0);
+      };
+      self.reset();
+
       self.findMyLocation = function(){
         if(!myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
           self.message = "Please select your car first.";
@@ -403,5 +421,16 @@ app.controller('mainCtrl',[
           );
         }
       };
+
+      self.open_InfoWindowByMarkerIndex = function(index) {
+        google.maps.event.trigger(myMap.markers[index], 'click');
+      };
+
+      self.openStationPanel = function(){
+        console.log("open Station Panel!!");
+        self.stationPanelMode = true;
+      };
+
+
     }
 ]);
