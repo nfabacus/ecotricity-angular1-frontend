@@ -190,11 +190,8 @@ app.service('myMap', ['$q', '$compile', function($q, $compile) {
       marker,
       'click',
       function(){
-        // return function(){
-          // o.$apply();
           o.infoWindow.setContent( compiled[0]);
           o.infoWindow.open( o.map, marker );
-        // };//return fn()
     });
 
     return marker;
