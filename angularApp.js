@@ -71,7 +71,7 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
   return o;
 }]);
 
-app.service('myMap', ['$q', '$compile', function($q, $compile) {
+app.service('myMap', ['$q', function($q) {
   var o = {};
   o.init = function() {
     o.markers = [];
@@ -131,6 +131,8 @@ app.service('myMap', ['$q', '$compile', function($q, $compile) {
     return iconImg;
   };
 
+  o.htmlElm;
+  o.compiled;
   o.create_marker = function(locatObj) {
     locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
     console.log("In create_marker,");
@@ -142,6 +144,7 @@ app.service('myMap', ['$q', '$compile', function($q, $compile) {
           title: locatObj.name,
           icon: locatObj.markerIcon
     });
+
 
     // Create & place an info window for the location.
     var content = '<div class="infowindow">';
@@ -184,13 +187,15 @@ app.service('myMap', ['$q', '$compile', function($q, $compile) {
     //   });
     // }
     content +="</div>";
-    var compiled = $compile(content)(o);
+
+    o.htmlElm = content;
 
     google.maps.event.addListener(
       marker,
       'click',
       function(){
-          o.infoWindow.setContent( compiled[0]);
+          console.log("compiled var in myMap service after click", o.compiled[0]);
+          o.infoWindow.setContent( o.compiled[0]);
           o.infoWindow.open( o.map, marker );
     });
 
@@ -281,7 +286,7 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
 }]);
 
 app.controller('mainCtrl',[
-    'chargingStations', 'myDetails', 'myMap', 'myCars', '$timeout', function(chargingStations, myDetails, myMap, myCars, $timeout ){
+    'chargingStations', 'myDetails', 'myMap', 'myCars', '$timeout', '$scope', '$compile', function(chargingStations, myDetails, myMap, myCars, $timeout, $scope, $compile ){
       var self = this;
       self.reset = function() {
         self.loading = false;
@@ -297,6 +302,12 @@ app.controller('mainCtrl',[
         $('.menuBox').scrollTop(0);
       };
       self.reset();
+
+      $scope.$watch(function () { return myMap.htmlElm }, function (newVal, oldVal) {
+          if (typeof newVal !== 'undefined') {
+              myMap.compiled = $compile(myMap.htmlElm)($scope);
+          }
+      });
 
       self.findMyLocation = function(){
         if(!myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
