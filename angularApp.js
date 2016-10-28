@@ -1,5 +1,9 @@
 var app = angular.module('ecoAngular1App',[]);
 
+app.config(['$compileProvider', function ($compileProvider) {
+    $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|local|data|chrome-extension):/);
+}]);
+
 app.factory('myCars', function(){
   var o = {
     myCars: [
@@ -36,35 +40,36 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
     o.myDetails.vehicleSpec = selectedCar.vehicleSpec;
   };
 
-  o.getMyCoords = function(){
+  o.get_myCoords = function(){
     var deferred = $q.defer();
 
     if (navigator.geolocation) {
       console.log("Finding your location...");
-      navigator.geolocation.getCurrentPosition(showPosition, showError);
+      navigator.geolocation.getCurrentPosition(show_position, show_error);
     } else {
       console.log("Geolocation is not supported by this browser.");
     }
-    function showPosition(position){
+    function show_position(position){
       console.log("your coords found:", position.coords);
       deferred.resolve(position.coords);
     }
-    function showError(error) {
+    function show_error(error) {
       deferred.reject();
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-            instructionEl.innerHTML = "User denied the request for Geolocation.";
-            break;
-        case error.POSITION_UNAVAILABLE:
-            instructionEl.innerHTML = "Location information is unavailable.";
-            break;
-        case error.TIMEOUT:
-            instructionEl.innerHTML = "The request to get user location timed out.";
-            break;
-        case error.UNKNOWN_ERROR:
-            instructionEl.innerHTML = "An unknown error occurred.";
-            break;
-      }
+      // *** Implement display of error message here TBW ***
+      // switch(error.code) {
+      //   case error.PERMISSION_DENIED:
+      //       instructionEl.innerHTML = "User denied the request for Geolocation.";
+      //       break;
+      //   case error.POSITION_UNAVAILABLE:
+      //       instructionEl.innerHTML = "Location information is unavailable.";
+      //       break;
+      //   case error.TIMEOUT:
+      //       instructionEl.innerHTML = "The request to get user location timed out.";
+      //       break;
+      //   case error.UNKNOWN_ERROR:
+      //       instructionEl.innerHTML = "An unknown error occurred.";
+      //       break;
+      // }
     }
     return deferred.promise;
   };
@@ -158,7 +163,7 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
     chargingStations: []
   };
 
-  o.getAll = function(myCarData) {
+  o.get_10Stations = function(myCarData) {
     var deferred = $q.defer();
     var settings = {
       "async": true,
@@ -172,7 +177,7 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
       },
       "data": $.param(myCarData)
     };
-    console.log("getAll param data:", settings.data);
+    console.log("get_10Stations param data:", settings.data);
     $http(settings).then(function(data){
       console.log("response:", data.data.result);
       deferred.resolve(data.data.result);
@@ -234,83 +239,7 @@ app.controller('mainCtrl',[
       };
       self.reset();
 
-      self.create_marker = function(locatObj) {
-        locatObj.markerIcon = myMap.select_markerIcon(locatObj.pumpModel);
-        console.log("In create_marker,");
-        console.log("locatObj:", locatObj);
-        var marker = new google.maps.Marker({
-              map: myMap.map,
-              position: new google.maps.LatLng(locatObj.latitude, locatObj.longitude),
-              animation: google.maps.Animation.DROP,
-              title: locatObj.name,
-              icon: locatObj.markerIcon
-        });
-
-
-        // Create & place an info window for the location.
-        var content = '<div class="infowindow">';
-
-        if(locatObj.name){
-          content += '<h2>' + marker.title + '</h2>';
-        }
-
-        if (locatObj.pumpModel) {
-          content +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
-        }
-        if (locatObj.location) {
-          content +='<h3 class="narrow">'+locatObj.location+'</h3>';
-        }
-        if (locatObj.postcode) {
-          content +='<h3 class="narrow">'+locatObj.postcode+'</h3>';
-        }
-        if (locatObj.distance) {
-          content +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
-        }
-        if (locatObj.postcode) {
-          content +='<button ng-click="mCtrl.openStationPanel('+locatObj.locationId+')">Details</button><br/>';
-        }
-        console.log("locationObj.locationId exists?:", locatObj.locationId);
-        // if (locatObj.pumpDetails){
-        //   locatObj.pumpDetails.forEach(function(pumpObj){
-        //     var pumpStr ="<div class='pumpDiv'>"
-        //     pumpObj.connector.forEach(function(connector){
-        //       var connectorStr =
-        //         "<div class='connectorDiv'>"+
-        //         "<img src='"+o.select_markerIcon(connector.type)+"' />"+
-        //         "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
-        //         "<p>Compatibility with your car: "+connector.compatible+"</p>"+
-        //         "<p>Availability: "+connector.status+"</p>"+
-        //         "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
-        //         "</div>";
-        //       pumpStr += connectorStr;
-        //     });
-        //       pumpStr +="</div>";
-        //       content += pumpStr;
-        //   });
-        // }
-        content +="</div>";
-
-        var compiled = $compile(content)($scope);
-
-        google.maps.event.addListener(
-          marker,
-          'click',
-          function(){
-                console.log("compiled var in myMap service after click", compiled[0]);
-                myMap.infoWindow.setContent( compiled[0]);
-                myMap.infoWindow.open( myMap.map, marker );
-        });
-
-        return marker;
-      };
-      // compiles info View string and sends it back to the myMap service.
-      // $scope.$watch(function () { return myMap.htmlElm }, function (newVal, oldVal) {
-      //     if (typeof(newVal) !== oldVal) {
-              // myMap.compiled = $compile(myMap.htmlElm)($scope);
-      //     }
-      // });
-
-      self.findMyLocation = function(){
+      self.find_myLocation = function(){
         if(!myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
           self.message = "Please select your car first.";
           $timeout(function(){
@@ -319,9 +248,9 @@ app.controller('mainCtrl',[
         } else {
           self.message = "Finding your location...";
           self.loading = true;
-          myDetails.getMyCoords()
+          myDetails.get_myCoords()
           .then(
-            function setCoords(coordsData){ //success
+            function set_coords(coordsData){ //success
               console.log(coordsData);
               self.message = "Got your location.";
               self.loading = false;
@@ -334,7 +263,7 @@ app.controller('mainCtrl',[
               $timeout(function(){
                 self.message = null;
               }, 2000);
-              self.findStations();
+              self.find_stations();
           });
         }
       };
@@ -364,7 +293,7 @@ app.controller('mainCtrl',[
                   $timeout(function(){
                     self.message = null;
                   }, 2000);
-                  self.findStations();
+                  self.find_stations();
                 },
                 function(status) { // error
                     self.apiError = true;
@@ -381,7 +310,7 @@ app.controller('mainCtrl',[
         myDetails.set_car(selectedCar);
       };
 
-      self.findStations = function(){
+      self.find_stations = function(){
         self.apiError = false;
         if(!myDetails.myDetails.name || !myDetails.myDetails.latitude || !myDetails.myDetails.longitude || !myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
 
@@ -393,14 +322,14 @@ app.controller('mainCtrl',[
           self.mapMode = true;
           self.message = "Searching 10 charging stations nearest to you...";
           self.loading = true;
-          chargingStations.getAll(myDetails.myDetails)
+          chargingStations.get_10Stations(myDetails.myDetails)
           .then(
             function(res) { //success
               self.message = "Found 10 nearest charging stations.";
               self.loading = false;
               self.list = res;
               angular.copy(res, chargingStations.chargingStations);
-              console.log("in getAll, chargingStations:", chargingStations.chargingStations);
+              console.log("in get_10Stations, chargingStations:", chargingStations.chargingStations);
               console.log("myMap:", myMap);
               chargingStations.chargingStations.forEach(function(station, index){
                 chargingStations.get_pumpDetails(station, myDetails.myDetails).then(
@@ -412,7 +341,6 @@ app.controller('mainCtrl',[
                     console.log("res", res);
                     var marker = self.create_marker(chargingStations.chargingStations[index]);
                     myMap.markers.push(marker);
-
                   },
                   function(status) { // error
                     self.apiError = true;
@@ -433,19 +361,75 @@ app.controller('mainCtrl',[
         }
       };
 
+
+      // Create markers for charging stations on the map
+      self.select_markerIcon = function(pumpModel){
+        return myMap.select_markerIcon(pumpModel);
+      };
+
+      self.create_marker = function(locatObj) {
+        locatObj.markerIcon = myMap.select_markerIcon(locatObj.pumpModel);
+        console.log("In create_marker,");
+        console.log("locatObj:", locatObj);
+        var marker = new google.maps.Marker({
+              map: myMap.map,
+              position: new google.maps.LatLng(locatObj.latitude, locatObj.longitude),
+              animation: google.maps.Animation.DROP,
+              title: locatObj.name,
+              icon: locatObj.markerIcon
+        });
+
+        // Create & place an info window for the location.
+        var content = '<div class="infowindow">';
+
+        if(locatObj.name){
+          content += '<h2>' + marker.title + '</h2>';
+        }
+
+        if (locatObj.pumpModel) {
+          content +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
+        }
+        if (locatObj.location) {
+          content +='<h3 class="narrow">'+locatObj.location+'</h3>';
+        }
+        if (locatObj.postcode) {
+          content +='<h3 class="narrow">'+locatObj.postcode+'</h3>';
+        }
+        if (locatObj.distance) {
+          content +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
+        }
+        if (locatObj.postcode) {
+          content +='<button ng-click="mCtrl.open_stationPanel('+locatObj.locationId+')">Details</button><br/>';
+        }
+
+        content +="</div>";
+
+        var compiled = $compile(content)($scope);
+
+        google.maps.event.addListener(
+          marker,
+          'click',
+          function(){
+                console.log("compiled var in myMap service after click", compiled[0]);
+                myMap.infoWindow.setContent( compiled[0]);
+                myMap.infoWindow.open( myMap.map, marker );
+        });
+
+        return marker;
+      };
+
       self.open_InfoWindowByMarkerIndex = function(index) {
         google.maps.event.trigger(myMap.markers[index], 'click');
       };
 
-      self.openStationPanel = function(locationId){
+      self.open_stationPanel = function(locationId){
         console.log("open Station Panel!! locationId is ", locationId);
-       var station = chargingStations.chargingStations.filter(function(station){
+       self.stationDetails = chargingStations.chargingStations.filter(function(station){
           return station.locationId === String(locationId);
-        });
+        })[0];
 
         self.stationPanelMode = true;
       };
-
 
     }
 ]);

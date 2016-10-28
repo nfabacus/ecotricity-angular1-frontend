@@ -27,7 +27,7 @@
           <select ng-model="selectedCar" ng-options="car as car.vehicleMake +' '+car.vehicleModel + ' '+car.vehicleSpec for car in mCtrl.listOfCars" ng-change="mCtrl.select_car(selectedCar)"></select>
           <h3>{{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
           <p>2. Where do you want to start from?</p>
-          <button class="btn" ng-click="mCtrl.findMyLocation()">Where I am now</button>
+          <button class="btn" ng-click="mCtrl.find_myLocation()">Where I am now</button>
            OR
           <form ng-class="inline" name="searchForm" novalidate
           ng-submit="mCtrl.search()">
@@ -50,10 +50,22 @@
           </li>
         </ul>
 
-        <div id="chargingStationPanel" ng-if="mCtrl.stationPanelMode" >
-
+        <div id="chargingStationPanel" class="chargingStationPanel" ng-if="mCtrl.stationPanelMode" >
           <!-- titles and details,etc. -->
-          <h1>HELLO, Station Panel Mode is On.</h1>
+          <h1>{{ mCtrl.stationDetails.name }}</h1>
+
+          <div ng-repeat="pumpObj in mCtrl.stationDetails.pumpDetails">
+            <div class='pumpDiv' ng-repeat="connector in pumpObj.connector">
+              <div class='connectorDiv'>
+                <img ng-src="{{mCtrl.select_markerIcon(connector.type)}}" />
+                <h4>Connector {{ connector.connectorId }}: {{connector.name}}</h4>
+                <p>Compatibility with your car: {{ connector.compatible }}</p>
+                <p>Availability: {{connector.status}}</p>
+                <p>Session Duration: {{connector.sessionDuration}} mins</p>
+                <p>Availability: {{connector.status}}</p>
+              </div>
+            </div>
+          </div>
 
           <!-- new map with markers for user location and selected charging station -->
 
