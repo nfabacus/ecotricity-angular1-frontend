@@ -75,6 +75,8 @@ app.service('myMap', ['$q', function($q) {
   var o = {};
   o.init = function() {
     o.markers = [];
+    o.htmlElm ="";
+    o.compiled =[];
     o.infoWindow = new google.maps.InfoWindow();
     var centerOfUK = new google.maps.LatLng(55.378051,-3.435973);
     var mapCanvas = document.getElementById("map");
@@ -131,83 +133,12 @@ app.service('myMap', ['$q', function($q) {
     return iconImg;
   };
 
-  o.htmlElm;
-  o.compiled;
-  o.create_marker = function(locatObj) {
-    locatObj.markerIcon = o.select_markerIcon(locatObj.pumpModel);
-    console.log("In create_marker,");
-    console.log("locatObj:", locatObj);
-    var marker = new google.maps.Marker({
-          map: o.map,
-          position: new google.maps.LatLng(locatObj.latitude, locatObj.longitude),
-          animation: google.maps.Animation.DROP,
-          title: locatObj.name,
-          icon: locatObj.markerIcon
-    });
-
-
-    // Create & place an info window for the location.
-    var content = '<div class="infowindow">';
-
-    if(locatObj.name){
-      content += '<h2>' + marker.title + '</h2>';
-    }
-
-    if (locatObj.pumpModel) {
-      content +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
-    }
-    if (locatObj.location) {
-      content +='<h3 class="narrow">'+locatObj.location+'</h3>';
-    }
-    if (locatObj.postcode) {
-      content +='<h3 class="narrow">'+locatObj.postcode+'</h3>';
-    }
-    if (locatObj.distance) {
-      content +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
-    }
-    if (locatObj.postcode) {
-      content +='<button ng-click="mCtrl.openStationPanel()">Details</button><br/>';
-    }
-    // if (locatObj.pumpDetails){
-    //   locatObj.pumpDetails.forEach(function(pumpObj){
-    //     var pumpStr ="<div class='pumpDiv'>"
-    //     pumpObj.connector.forEach(function(connector){
-    //       var connectorStr =
-    //         "<div class='connectorDiv'>"+
-    //         "<img src='"+o.select_markerIcon(connector.type)+"' />"+
-    //         "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
-    //         "<p>Compatibility with your car: "+connector.compatible+"</p>"+
-    //         "<p>Availability: "+connector.status+"</p>"+
-    //         "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
-    //         "</div>";
-    //       pumpStr += connectorStr;
-    //     });
-    //       pumpStr +="</div>";
-    //       content += pumpStr;
-    //   });
-    // }
-    content +="</div>";
-
-    o.htmlElm = content;
-
-    google.maps.event.addListener(
-      marker,
-      'click',
-      function(){
-          console.log("compiled var in myMap service after click", o.compiled[0]);
-          o.infoWindow.setContent( o.compiled[0]);
-          o.infoWindow.open( o.map, marker );
-    });
-
-    return marker;
-  };
-
-  o.place_myLocMarker = function(location){
+  o.place_myLocMarker = function(location, marker){
     if(o.myLocMarker) {
       o.clear_marker(o.myLocMarker);
       o.clear_markers(o.markers);
     }
-    o.myLocMarker = o.create_marker(location);
+    o.myLocMarker = marker;
   };
 
   o.clear_marker = function(marker){
@@ -303,11 +234,81 @@ app.controller('mainCtrl',[
       };
       self.reset();
 
-      $scope.$watch(function () { return myMap.htmlElm }, function (newVal, oldVal) {
-          if (typeof newVal !== 'undefined') {
-              myMap.compiled = $compile(myMap.htmlElm)($scope);
-          }
-      });
+      self.create_marker = function(locatObj) {
+        locatObj.markerIcon = myMap.select_markerIcon(locatObj.pumpModel);
+        console.log("In create_marker,");
+        console.log("locatObj:", locatObj);
+        var marker = new google.maps.Marker({
+              map: myMap.map,
+              position: new google.maps.LatLng(locatObj.latitude, locatObj.longitude),
+              animation: google.maps.Animation.DROP,
+              title: locatObj.name,
+              icon: locatObj.markerIcon
+        });
+
+
+        // Create & place an info window for the location.
+        var content = '<div class="infowindow">';
+
+        if(locatObj.name){
+          content += '<h2>' + marker.title + '</h2>';
+        }
+
+        if (locatObj.pumpModel) {
+          content +='<h4 class="narrow">'+locatObj.pumpModel+'</h4>';
+        }
+        if (locatObj.location) {
+          content +='<h3 class="narrow">'+locatObj.location+'</h3>';
+        }
+        if (locatObj.postcode) {
+          content +='<h3 class="narrow">'+locatObj.postcode+'</h3>';
+        }
+        if (locatObj.distance) {
+          content +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
+        }
+        if (locatObj.postcode) {
+          content +='<button ng-click="mCtrl.openStationPanel('+locatObj.locationId+')">Details</button><br/>';
+        }
+        console.log("locationObj.locationId exists?:", locatObj.locationId);
+        // if (locatObj.pumpDetails){
+        //   locatObj.pumpDetails.forEach(function(pumpObj){
+        //     var pumpStr ="<div class='pumpDiv'>"
+        //     pumpObj.connector.forEach(function(connector){
+        //       var connectorStr =
+        //         "<div class='connectorDiv'>"+
+        //         "<img src='"+o.select_markerIcon(connector.type)+"' />"+
+        //         "<h4>Connector "+connector.connectorId+": "+connector.name+"</h4>"+
+        //         "<p>Compatibility with your car: "+connector.compatible+"</p>"+
+        //         "<p>Availability: "+connector.status+"</p>"+
+        //         "<p>Session Duration: "+connector.sessionDuration+" mins</p>"+
+        //         "</div>";
+        //       pumpStr += connectorStr;
+        //     });
+        //       pumpStr +="</div>";
+        //       content += pumpStr;
+        //   });
+        // }
+        content +="</div>";
+
+        var compiled = $compile(content)($scope);
+
+        google.maps.event.addListener(
+          marker,
+          'click',
+          function(){
+                console.log("compiled var in myMap service after click", compiled[0]);
+                myMap.infoWindow.setContent( compiled[0]);
+                myMap.infoWindow.open( myMap.map, marker );
+        });
+
+        return marker;
+      };
+      // compiles info View string and sends it back to the myMap service.
+      // $scope.$watch(function () { return myMap.htmlElm }, function (newVal, oldVal) {
+      //     if (typeof(newVal) !== oldVal) {
+              // myMap.compiled = $compile(myMap.htmlElm)($scope);
+      //     }
+      // });
 
       self.findMyLocation = function(){
         if(!myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
@@ -328,7 +329,8 @@ app.controller('mainCtrl',[
               myDetails.myDetails.latitude = coordsData.latitude;
               myDetails.myDetails.longitude = coordsData.longitude;
               myMap.center(coordsData.latitude, coordsData.longitude);
-              myMap.place_myLocMarker(myDetails.myDetails);
+              var myMarker = self.create_marker(myDetails.myDetails);
+              myMap.place_myLocMarker(myDetails.myDetails, myMarker);
               $timeout(function(){
                 self.message = null;
               }, 2000);
@@ -357,7 +359,8 @@ app.controller('mainCtrl',[
                   myDetails.myDetails.longitude = res.geometry.location.lng();
 
                   myMap.center(myDetails.myDetails.latitude, myDetails.myDetails.longitude);
-                  myMap.place_myLocMarker(myDetails.myDetails);
+                  var searchMarker = self.create_marker(myDetails.myDetails);
+                  myMap.place_myLocMarker(myDetails.myDetails, searchMarker);
                   $timeout(function(){
                     self.message = null;
                   }, 2000);
@@ -407,7 +410,7 @@ app.controller('mainCtrl',[
                     console.log("index", index);
                     console.log("charginStations.charginStations[index]:", chargingStations.chargingStations[index]);
                     console.log("res", res);
-                    var marker = myMap.create_marker(chargingStations.chargingStations[index]);
+                    var marker = self.create_marker(chargingStations.chargingStations[index]);
                     myMap.markers.push(marker);
 
                   },
@@ -434,8 +437,12 @@ app.controller('mainCtrl',[
         google.maps.event.trigger(myMap.markers[index], 'click');
       };
 
-      self.openStationPanel = function(){
-        console.log("open Station Panel!!");
+      self.openStationPanel = function(locationId){
+        console.log("open Station Panel!! locationId is ", locationId);
+       var station = chargingStations.chargingStations.filter(function(station){
+          return station.locationId === String(locationId);
+        });
+
         self.stationPanelMode = true;
       };
 
