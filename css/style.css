@@ -69,7 +69,7 @@ blockquote.bubble {
 blockquote.speech {
   background: url(../../library/images/speech-bubble2.svg);
   /*width: 25%;*/
-  padding: 5% 5% 15% 5%;
+  padding: 10% 5% 15% 5%;
 }
 
 .pulsate {
@@ -157,26 +157,15 @@ ul {
     font-size: 20px;
 }
 
-.connectorDiv {
-  border-radius: 8px;
-  display: inline-block;
-  padding: 10px;
-  margin: 5px;
-  background-color: #CDDC39;
-}
-
-.pumpDiv {
-  background-color: rgba(77, 100, 111, 0.48);
-    padding: 2;
-    border-radius: 9px;
-    margin: 10px auto 10px auto;
-}
-
 /**Style for Charging Station Detail Page**/
 .chargingStationPanel {
-  font-size: 25px;
-  background-color: rgba(251, 251, 251, 0.75);
+  background-color: white;
+  background-image: url("../library/images/electricMotorWay.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   /*z-index: 1;*/
+  font-size: 25px;
   width: 100%;
   height: 100%;
   overflow: auto;
@@ -186,10 +175,47 @@ ul {
   transform: translate(-50%, -50%);
 }
 
-/*Style for direction panel*/
-#direction-panel {
+.pumpDiv {
+  background-color: rgba(77, 100, 111, 0.48);
+  margin: 10px;
+  padding: 5px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.connectorDiv {
+  background-color: #CDDC39;
+  border-radius: 8px;
+  width: 400px;
+  font-size: 22px;
+  margin: 5px;
+  padding: 10px;
+  display: inline-block;
+}
+
+.closeBtn {
+  position: absolute;
+    top: 2%;
+    right: 5%;
+    font-size: 60px;
+    color: gray;
+    border: none;
+    background: none;
+}
+.closeBtn:focus {outline:0;}
+
+/*Style for directions map*/
+#directionsMap {
+  margin: auto;
+  width:80%;
+  height:600px;
+}
+
+/*Style for directions panel*/
+#directionsPanel {
   width: 80%;
   margin: auto;
+  background-color: rgb(255, 255, 255);
 }
 
 table.adp-directions {

@@ -91,8 +91,6 @@ app.service('myMap', ['$q', function($q) {
         disableDefaultUI: true
     };
     o.map = new google.maps.Map(mapCanvas, options);
-    o.directionsService = new google.maps.DirectionsService;
-    o.directionsDisplay = new google.maps.DirectionsRenderer;
     o.places = new google.maps.places.PlacesService(o.map);
   };
 
@@ -154,6 +152,33 @@ app.service('myMap', ['$q', function($q) {
       o.clear_marker(marker);
     });
     o.markers = [];
+  };
+  o.calculateAndDisplayRoute = function(origin, destination) {
+    var mapCenter = new google.maps.LatLng(origin.latitude, origin.longitude);
+    var mapCanvas = document.getElementById("directionsMap");
+    var options = {
+        center: mapCenter,
+        zoom: 6,
+        disableDefaultUI: true
+    };
+    o.directionsMap = new google.maps.Map(mapCanvas, options);
+    o.directionsService = new google.maps.DirectionsService;
+    o.directionsDisplay = new google.maps.DirectionsRenderer;
+
+    o.directionsDisplay.setMap(o.directionsMap);
+    o.directionsDisplay.setPanel(document.getElementById('directionsPanel'));
+    o.directionsService.route({
+      origin: origin.latitude+","+origin.longitude,
+      destination: destination,
+      travelMode: 'DRIVING',
+      unitSystem: google.maps.UnitSystem.IMPERIAL
+    }, function(response, status) {
+      if (status === 'OK') {
+        o.directionsDisplay.setDirections(response);
+      } else {
+        window.alert('Directions request failed due to ' + status);
+      }
+    });
   };
   return o;
 }]);
@@ -399,7 +424,7 @@ app.controller('mainCtrl',[
           content +='<h3 class="narrow">Distance: '+(locatObj.distance).toFixed(1)+' Miles</h3>';
         }
         if (locatObj.postcode) {
-          content +='<button ng-click="mCtrl.open_stationPanel('+locatObj.locationId+')">Details</button><br/>';
+          content +='<button class="btn" ng-click="mCtrl.open_stationPanel('+locatObj.locationId+')">Details</button><br/>';
         }
 
         content +="</div>";
@@ -429,6 +454,16 @@ app.controller('mainCtrl',[
         })[0];
 
         self.stationPanelMode = true;
+      };
+
+      self.close_stationPanel = function(){
+        console.log("closed Station Panel!!");
+        self.stationPanelMode = false;
+      };
+
+      self.get_directions = function(){
+        var myLatiLong = {latitude: myDetails.myDetails.latitude, longitude: myDetails.myDetails.longitude};
+        myMap.calculateAndDisplayRoute(myLatiLong, self.stationDetails.postcode);
       };
 
     }

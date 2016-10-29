@@ -52,24 +52,28 @@
 
         <div id="chargingStationPanel" class="chargingStationPanel" ng-if="mCtrl.stationPanelMode" >
           <!-- titles and details,etc. -->
+          <button class="closeBtn" ng-click="mCtrl.close_stationPanel()">x</button>
           <h1>{{ mCtrl.stationDetails.name }}</h1>
+          <h4 class="narrow">{{ mCtrl.stationDetails.pumpModel }}</h4>
+          <h3 class="narrow">{{mCtrl.stationDetails.location}}</h3>
+          <h3 class="narrow">{{mCtrl.stationDetails.postcode}}</h3>
+          <h3 class="narrow">{{(mCtrl.stationDetails.distance).toFixed(1)+'Miles'}}</h3>
+          <button class="btn" ng-click="mCtrl.get_directions()">Get Directions</button><br />
 
-          <div ng-repeat="pumpObj in mCtrl.stationDetails.pumpDetails">
-            <div class='pumpDiv' ng-repeat="connector in pumpObj.connector">
-              <div class='connectorDiv'>
-                <img ng-src="{{mCtrl.select_markerIcon(connector.type)}}" />
-                <h4>Connector {{ connector.connectorId }}: {{connector.name}}</h4>
-                <p>Compatibility with your car: {{ connector.compatible }}</p>
-                <p>Availability: {{connector.status}}</p>
-                <p>Session Duration: {{connector.sessionDuration}} mins</p>
-                <p>Availability: {{connector.status}}</p>
-              </div>
+          <div class='pumpDiv' ng-repeat="pumpObj in mCtrl.stationDetails.pumpDetails">
+            <div ng-repeat="connector in pumpObj.connector" class='connectorDiv'>
+              <img ng-src="{{mCtrl.select_markerIcon(connector.type)}}" />
+              <h4>Connector {{ connector.connectorId }}: {{connector.name}}</h4>
+              <p>Compatibility with your car: {{ connector.compatible }}</p>
+              <p>Status: {{connector.status}}</p>
+              <p>Session Duration: {{connector.sessionDuration}} mins</p>
             </div>
           </div>
 
           <!-- new map with markers for user location and selected charging station -->
+          <div id="directionsMap"></div>
 
-          <div id="direction-panel" class="animated slideInUp"></div>
+          <div id="directionsPanel" class="animated slideInUp"></div>
         </div>
 
         <p>Search again with another car and/or location.</p>
