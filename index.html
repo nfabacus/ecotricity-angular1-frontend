@@ -10,16 +10,13 @@
     <script src="angularApp.js"></script>
   </head>
   <body >
-    <div id="container">
-			<div ng-class="brandDiv">
-				<img ng-class="logo" src="library/images/ecotricity-logo-large.jpg" alt="Ecotricity Logo" />
-				<img ng-class="strapline" src="library/images/britain-s-leading-green-energy-supplier.jpg" alt="Ecotricity Logo" />
-			</div>
-      <div ng-controller="mainCtrl as mCtrl">
+    <div id="container" ng-cloak>
+      <directory-brand></directory-brand>
 
-        <div id="map"></div>
-        <div ng-if="!mCtrl.mapMode" class="menuBoxBackground"></div>
-        <div ng-if="!mCtrl.mapMode" class="menuBox">
+      <div ng-controller="mainCtrl as mCtrl">
+        <div ng-if="mCtrl.menuMode" ng-cloak class="menuBoxBackground"></div>
+        <div ng-if="mCtrl.menuMode" ng-cloak class="menuBox">
+          <directory-brand></directory-brand>
           <h2>Electric Highway Finder</h2>
           <div id="instruction"></div>
 
@@ -27,59 +24,75 @@
           <select ng-model="selectedCar" ng-options="car as car.vehicleMake +' '+car.vehicleModel + ' '+car.vehicleSpec for car in mCtrl.listOfCars" ng-change="mCtrl.select_car(selectedCar)"></select>
           <h3>{{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
           <p>2. Where do you want to start from?</p>
-          <button class="btn" ng-click="mCtrl.find_myLocation()">Where I am now</button>
+          <button class="btn" ng-click="mCtrl.find_myLocation()">Where I am now</button><br/>
            OR
           <form ng-class="inline" name="searchForm" novalidate
           ng-submit="mCtrl.search()">
 
-            Type in your location:
+            Type in a departure location:
             <input ng-class="inputBox" name="place" type="text" ng-model="mCtrl.searchPlace" required autofocus />
                   {{searchPlace}}
             <span >
               <button class="btn" ng-disabled="searchForm.$invalid">Go!</button>
             </span>
           </form>
+          <p id="errorMessage" class="errorMessage"></p>
         </div>
 
-        <h3 ng-if="mCtrl.list" class='animated fadeIn'>Here are the 10 charnging stations closest to you.</h3>
-        <p>Click each marker above or list below to see more details, including distance and directions.</p>
+        <div class="buttonsSection" ng-cloak>
+          <a ng-if="mCtrl.mapMode" href="#stationDetailsView" class="btn">Map</a>
+          <a ng-if="mCtrl.mapMode" href="#stationList" class="btn">List</a>
+          <button ng-if="mCtrl.stationPanelMode" ng-cloak class="closeBtn" ng-click="mCtrl.close_stationPanel()">x</button>
+        </div>
 
-        <ul id="chargingStations">
-          <li ng-repeat="item in mCtrl.list">
-            <a href="#" ng-click="mCtrl.open_InfoWindowByMarkerIndex($index)">{{$index+1}}: {{item.name}} - {{item.location}}, Distance: {{(item.distance).toFixed(1)+"miles"}}</a>
-          </li>
-        </ul>
+        <div id="stationDetailsView" ng-cloak>
+          <h3 ng-if="mCtrl.list" ng-cloak class='animated fadeIn'>Here are the 10 charnging stations closest to you.</h3>
 
-        <div id="chargingStationPanel" class="chargingStationPanel" ng-if="mCtrl.stationPanelMode" >
-          <!-- titles and details,etc. -->
-          <button class="closeBtn" ng-click="mCtrl.close_stationPanel()">x</button>
-          <h1>{{ mCtrl.stationDetails.name }}</h1>
-          <h4 class="narrow">{{ mCtrl.stationDetails.pumpModel }}</h4>
-          <h3 class="narrow">{{mCtrl.stationDetails.location}}</h3>
-          <h3 class="narrow">{{mCtrl.stationDetails.postcode}}</h3>
-          <h3 class="narrow">{{(mCtrl.stationDetails.distance).toFixed(1)+'Miles'}}</h3>
-          <button class="btn" ng-click="mCtrl.get_directions()">Get Directions</button><br />
+          <h3 id="mapTitle" class="narrow" >Map</h3>
+          <div id="map"></div>
 
-          <div class='pumpDiv' ng-repeat="pumpObj in mCtrl.stationDetails.pumpDetails">
-            <div ng-repeat="connector in pumpObj.connector" class='connectorDiv'>
-              <img ng-src="{{mCtrl.select_markerIcon(connector.type)}}" />
-              <h4>Connector {{ connector.connectorId }}: {{connector.name}}</h4>
-              <p>Compatibility with your car: {{ connector.compatible }}</p>
-              <p>Status: {{connector.status}}</p>
-              <p>Session Duration: {{connector.sessionDuration}} mins</p>
+          <h3 id="stationList" class="narrow">List</h3>
+          <p>Click each marker above or list below to see more details, including distance and directions.</p>
+          <div id="chargingStations">
+            <div ng-repeat="station in mCtrl.list">
+              <a href="#" ng-click="mCtrl.open_InfoWindowByMarkerIndex($index)">{{$index+1}}: {{station.name}} - {{station.location}}, Distance: {{(station.distance).toFixed(1)+"miles"}}</a>
             </div>
           </div>
+        </div>
 
-          <!-- new map with markers for user location and selected charging station -->
+        <div class="chargingStationPanelImageLayer" ng-if="mCtrl.stationPanelMode" ng-cloak></div>
+        <div id="chargingStationPanel" class="chargingStationPanel" ng-if="mCtrl.stationPanelMode" ng-cloak>
+          <h1>{{ mCtrl.stationDetails.name }}</h1>
+          <h4 class="narrow" ng-cloak>{{ mCtrl.stationDetails.pumpModel }}</h4>
+          <h3 class="narrow" ng-cloak>{{mCtrl.stationDetails.location}}</h3>
+          <h3 class="narrow" ng-cloak>{{mCtrl.stationDetails.postcode}}</h3>
+          <h3 class="narrow" ng-cloak>{{(mCtrl.stationDetails.distance).toFixed(1)+'Miles'}}</h3>
+          <h3 ng-cloak>Your car: {{ mCtrl.selectedCar }}</h3>
+
+          <a href="#directionsPanel" class="btn" ng-click="mCtrl.get_directions()" ng-cloak>Check directions</a>
+          <p></p>
+          <div class='pumpDiv' ng-repeat="pumpObj in mCtrl.stationDetails.pumpDetails">
+            <h3 class="narrow">Pump ID: {{ pumpObj.pumpId }}</h3>
+            <div ng-repeat="connector in pumpObj.connector" class='connectorDiv'>
+              <img ng-src="{{mCtrl.select_markerIcon(connector.type)}}" />
+              <h4 class="narrow">Connector {{ connector.connectorId }}: {{connector.name}}</h4>
+              <p class="narrow">Compatibility with your car: {{ connector.compatible }}</p>
+              <p class="narrow">Status: {{connector.status}}</p>
+              <p class="narrow">Session Duration: {{connector.sessionDuration}} mins</p>
+            </div>
+          </div>
+          <br />
+
           <div id="directionsMap"></div>
 
           <div id="directionsPanel" class="animated slideInUp"></div>
         </div>
 
-        <p>Search again with another car and/or location.</p>
-        <button class="btn" ng-click="mCtrl.reset()">Reset!</button>
-
-        <blockquote ng-if="mCtrl.message != null"  ng-class="mCtrl.loading ? 'speech bubble pulsate' : 'speech bubble fadesOut'">{{mCtrl.message}}</blockquote>
+        <div ng-cloak>
+          <p>Search again with another car and/or location.</p>
+          <button class="btn" ng-click="mCtrl.reset()">Reset!</button>
+        </div>
+        <blockquote ng-if="mCtrl.message != null" ng-cloak ng-class="mCtrl.loading ? 'speech bubble pulsate' : 'speech bubble fadesOut'">{{mCtrl.message}}</blockquote>
       </div>
     </div>
 

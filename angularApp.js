@@ -4,6 +4,11 @@ app.config(['$compileProvider', function ($compileProvider) {
     $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|local|data|chrome-extension):/);
 }]);
 
+app.directive('directoryBrand', function(){
+  return {
+    templateUrl: 'directory-brand.html'
+  };
+});
 app.factory('myCars', function(){
   var o = {
     myCars: [
@@ -55,21 +60,20 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
     }
     function show_error(error) {
       deferred.reject();
-      // *** Implement display of error message here TBW ***
-      // switch(error.code) {
-      //   case error.PERMISSION_DENIED:
-      //       instructionEl.innerHTML = "User denied the request for Geolocation.";
-      //       break;
-      //   case error.POSITION_UNAVAILABLE:
-      //       instructionEl.innerHTML = "Location information is unavailable.";
-      //       break;
-      //   case error.TIMEOUT:
-      //       instructionEl.innerHTML = "The request to get user location timed out.";
-      //       break;
-      //   case error.UNKNOWN_ERROR:
-      //       instructionEl.innerHTML = "An unknown error occurred.";
-      //       break;
-      // }
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+            document.getElementById('errorMessage').innerHTML = "User denied the request for Geolocation.";
+            break;
+        case error.POSITION_UNAVAILABLE:
+            document.getElementById('errorMessage').innerHTML = "Location information is unavailable.";
+            break;
+        case error.TIMEOUT:
+            document.getElementById('errorMessage').innerHTML = "The request to get user location timed out.";
+            break;
+        case error.UNKNOWN_ERROR:
+            document.getElementById('errorMessage').innerHTML = "An unknown error occurred.";
+            break;
+      }
     }
     return deferred.promise;
   };
@@ -88,7 +92,7 @@ app.service('myMap', ['$q', function($q) {
     var options = {
         center: centerOfUK,
         zoom: 6,
-        disableDefaultUI: true
+        disableDefaultUI: false
     };
     o.map = new google.maps.Map(mapCanvas, options);
     o.places = new google.maps.places.PlacesService(o.map);
@@ -154,12 +158,15 @@ app.service('myMap', ['$q', function($q) {
     o.markers = [];
   };
   o.calculateAndDisplayRoute = function(origin, destination) {
+    // Clear past route.
+    document.getElementById("directionsPanel").innerHTML = "";
+
     var mapCenter = new google.maps.LatLng(origin.latitude, origin.longitude);
     var mapCanvas = document.getElementById("directionsMap");
     var options = {
         center: mapCenter,
         zoom: 6,
-        disableDefaultUI: true
+        disableDefaultUI: false
     };
     o.directionsMap = new google.maps.Map(mapCanvas, options);
     o.directionsService = new google.maps.DirectionsService;
@@ -250,12 +257,15 @@ app.controller('mainCtrl',[
     'chargingStations', 'myDetails', 'myMap', 'myCars', '$timeout', '$scope', '$compile', function(chargingStations, myDetails, myMap, myCars, $timeout, $scope, $compile ){
       var self = this;
       self.reset = function() {
+        self.selectedCar = null;
         self.loading = false;
         self.message = null;
         self.searchPlace = "";
         self.list = null;
         myDetails.myDetails = {};
         chargingStations.chargingStations = [];
+        self.stationDetails = null;
+        self.menuMode = true;
         self.mapMode = false;
         self.stationPanelMode = false;
         myMap.init();
@@ -332,6 +342,7 @@ app.controller('mainCtrl',[
       self.select_car = function(selectedCar){
         console.log("myDetails:", myDetails);
         console.log("hello, in controller! selectedCar:", selectedCar);
+        self.selectedCar = selectedCar.vehicleMake+" "+selectedCar.vehicleModel+" "+selectedCar.vehicleSpec;
         myDetails.set_car(selectedCar);
       };
 
@@ -344,6 +355,8 @@ app.controller('mainCtrl',[
             self.message = null;
           }, 2000);
         } else {
+          self.menuMode = false;
+          self.stationPanelMode = false;
           self.mapMode = true;
           self.message = "Searching 10 charging stations nearest to you...";
           self.loading = true;
@@ -353,19 +366,21 @@ app.controller('mainCtrl',[
               self.message = "Found 10 nearest charging stations.";
               self.loading = false;
               self.list = res;
+              console.log("LIST(should have no duplicate station):", self.list);
               angular.copy(res, chargingStations.chargingStations);
               console.log("in get_10Stations, chargingStations:", chargingStations.chargingStations);
               console.log("myMap:", myMap);
               chargingStations.chargingStations.forEach(function(station, index){
+                console.log("index inside charginstations.foreach:", index);
                 chargingStations.get_pumpDetails(station, myDetails.myDetails).then(
                   function(res) {
+                    console.log("index inside get_pumpDetails:", index);
                     chargingStations.chargingStations[index].pumpDetails = res;
 
-                    console.log("index", index);
                     console.log("charginStations.charginStations[index]:", chargingStations.chargingStations[index]);
                     console.log("res", res);
                     var marker = self.create_marker(chargingStations.chargingStations[index]);
-                    myMap.markers.push(marker);
+                    myMap.markers[index]=marker;
                   },
                   function(status) { // error
                     self.apiError = true;
@@ -444,6 +459,8 @@ app.controller('mainCtrl',[
       };
 
       self.open_InfoWindowByMarkerIndex = function(index) {
+        console.log("index in infoWindow:", index);
+        console.log("myMap.markers array in infoWindow:", myMap.markers);
         google.maps.event.trigger(myMap.markers[index], 'click');
       };
 
@@ -452,13 +469,18 @@ app.controller('mainCtrl',[
        self.stationDetails = chargingStations.chargingStations.filter(function(station){
           return station.locationId === String(locationId);
         })[0];
-
+        console.log("stationDetails with (more than 1) pumpS details:", self.stationDetails);
+        self.menuMode = false;
+        self.mapMode = false;
         self.stationPanelMode = true;
+
       };
 
       self.close_stationPanel = function(){
         console.log("closed Station Panel!!");
         self.stationPanelMode = false;
+        self.menuMode = false;
+        self.mapMode = true;
       };
 
       self.get_directions = function(){
