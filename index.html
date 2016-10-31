@@ -16,26 +16,39 @@
       <div ng-controller="mainCtrl as mCtrl">
         <div ng-if="mCtrl.menuMode" ng-cloak class="menuBoxBackground"></div>
         <div ng-if="mCtrl.menuMode" ng-cloak class="menuBox">
-          <directory-brand></directory-brand>
           <h2>Electric Highway Finder</h2>
-          <div id="instruction"></div>
+          <div ng-if="mCtrl.loginPanelOn" id="LogInPanel">
+            <h3>Please type in your username and password in order to access the list of your own cars.</h3>
+            <form name="loginForm" ng-submit="mCtrl.login()">
+              Username:
+              <input class="inputBox" name="username" type="text" ng-model="mCtrl.username" required autofocus />
+              <br/>
+              Password:
+              <input class="inputBox" name="password" type="password" ng-model="mCtrl.password" required autofocus />
+              <br/>
+              <button class="btn" ng-disabled="loginForm.$invalid">Access your car details</button>
+            </form>
+          </div>
 
-          <label for="cars">1. Please select your electric car: </label>
-          <select ng-model="selectedCar" ng-options="car as car.vehicleMake +' '+car.vehicleModel + ' '+car.vehicleSpec for car in mCtrl.listOfCars" ng-change="mCtrl.select_car(selectedCar)"></select>
-          <h3>{{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
-          <p>2. Where do you want to start from?</p>
-          <button class="btn" ng-click="mCtrl.find_myLocation()">Where I am now</button><br/>
-           OR
-          <form ng-class="inline" name="searchForm" novalidate
-          ng-submit="mCtrl.search()">
+          <div ng-if="!mCtrl.loginPanelOn" id="instruction" ng-cloak>
+            <label for="cars">1. Please select your electric car: </label>
+            <select ng-cloak ng-model="selectedCar" ng-options="car as car.make +' '+car.model + ' '+car.specification for car in mCtrl.listOfCars" ng-change="mCtrl.select_car(selectedCar)"></select>
+            <h3>{{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
 
-            Type in a departure location:
-            <input ng-class="inputBox" name="place" type="text" ng-model="mCtrl.searchPlace" required autofocus />
-                  {{searchPlace}}
-            <span >
-              <button class="btn" ng-disabled="searchForm.$invalid">Go!</button>
-            </span>
-          </form>
+            <p>2. Where do you want to start from?</p>
+            <button class="btn" ng-click="mCtrl.find_myLocation()">Where I am now</button><br/>
+             OR<br/>
+            <form class="inline" name="searchForm" novalidate
+            ng-submit="mCtrl.search()">
+
+              Type in a departure location:
+              <input class="inputBox" name="place" type="text" ng-model="mCtrl.searchPlace" required autofocus />
+                    {{searchPlace}}
+              <span >
+                <button class="btn" ng-disabled="searchForm.$invalid">Go!</button>
+              </span>
+            </form>
+          </div>
           <p id="errorMessage" class="errorMessage"></p>
         </div>
 

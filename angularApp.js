@@ -9,21 +9,51 @@ app.directive('directoryBrand', function(){
     templateUrl: 'directory-brand.html'
   };
 });
-app.factory('myCars', function(){
+
+app.factory('myCars', ['$http', '$q', function($http, $q){
   var o = {
     myCars: [
-      {vehicleMake: "Audi", vehicleModel: "A3 e-tron", vehicleSpec: "(2014-)"},
-      {vehicleMake: "Audi", vehicleModel: "Q7 e-Tron", vehicleSpec: "(2015-)"},
-      {vehicleMake: "Nissan", vehicleModel: "e-NV200 Combi", vehicleSpec: "(2015-)"},
-      {vehicleMake: "Nissan", vehicleModel: "e-NV200 Evalia", vehicleSpec: "(2015-)"},
-      {vehicleMake: "Nissan", vehicleModel: "e-NV200 van", vehicleSpec: "(2014-)"},
-      {vehicleMake: "Ford", vehicleModel: "C-MAX Energi", vehicleSpec: "(2014-)"},
-      {vehicleMake: "Ford", vehicleModel: "Focus EV", vehicleSpec: "(2014-)"},
-      {vehicleMake: "Ford", vehicleModel: "Fusion Energi", vehicleSpec: "(2015-)"}
+    //   {vehicleMake: "Audi", vehicleModel: "A3 e-tron", vehicleSpec: "(2014-)"},
+    //   {vehicleMake: "Audi", vehicleModel: "Q7 e-Tron", vehicleSpec: "(2015-)"},
+    //   {vehicleMake: "Nissan", vehicleModel: "e-NV200 Combi", vehicleSpec: "(2015-)"},
+    //   {vehicleMake: "Nissan", vehicleModel: "e-NV200 Evalia", vehicleSpec: "(2015-)"},
+    //   {vehicleMake: "Nissan", vehicleModel: "e-NV200 van", vehicleSpec: "(2014-)"},
+    //   {vehicleMake: "Ford", vehicleModel: "C-MAX Energi", vehicleSpec: "(2014-)"},
+    //   {vehicleMake: "Ford", vehicleModel: "Focus EV", vehicleSpec: "(2014-)"},
+    //   {vehicleMake: "Ford", vehicleModel: "Fusion Energi", vehicleSpec: "(2015-)"}
     ]
   };
-    return o;
-});
+
+  o.get_myCars = function(username, password){
+    self.loading = true;
+    var deferred = $q.defer();
+    var settings = {
+      "async": true,
+      "crossDomain": true,
+      "url": "https://www.ecotricity.co.uk/api/ezx/v1/getUserVehicleList",
+      "method": "POST",
+      "headers": {
+        "content-type": "application/x-www-form-urlencoded",
+        "cache-control": "no-cache",
+        "postman-token": "9d36f441-f7e3-4d6d-0b8c-6b0b58f9b104"
+      },
+      "data": $.param({
+        "identifier": username,
+        "password": password
+      })
+    };
+
+    $http(settings).then(function(data){
+      deferred.resolve(data.data.result);
+    }, function(err){
+      deferred.reject();
+      console.log("error", err);
+    });
+    return deferred.promise;
+  };
+
+  return o;
+}]);
 
 app.factory('myDetails', ['$http', '$q', function($http, $q){
 
@@ -39,9 +69,9 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
   };
 
   o.set_car = function(selectedCar){
-    o.myDetails.vehicleMake = selectedCar.vehicleMake;
-    o.myDetails.vehicleModel = selectedCar.vehicleModel;
-    o.myDetails.vehicleSpec = selectedCar.vehicleSpec;
+    o.myDetails.vehicleMake = selectedCar.make;
+    o.myDetails.vehicleModel = selectedCar.model;
+    o.myDetails.vehicleSpec = selectedCar.specification;
   };
 
   o.get_myCoords = function(){
@@ -249,6 +279,7 @@ app.service('chargingStations', ['$q','$http', function($q, $http){
 app.controller('mainCtrl',[
     'chargingStations', 'myDetails', 'myMap', 'myCars', '$timeout', '$scope', '$compile', function(chargingStations, myDetails, myMap, myCars, $timeout, $scope, $compile ){
       var self = this;
+      self.loginPanelOn = true;
       self.reset = function() {
         self.selectedCar = null;
         self.loading = false;
@@ -266,6 +297,32 @@ app.controller('mainCtrl',[
         $('.menuBox').scrollTop(0);
       };
       self.reset();
+
+      self.login = function(){
+        myCars.get_myCars(self.username, self.password).then(
+          function(res) { //success
+            self.message = "Found your car details.";
+            self.loading = false;
+            myCars.myCars = res;
+            self.listOfCars = myCars.myCars;
+
+            //Deletes username and password immediately as a secure login system is not implemented here for now.
+            self.username = "";
+            self.password = "";
+
+            $timeout(function(){
+              self.message = null;
+            }, 1000);
+            self.loginPanelOn = false;
+          },
+          function(status) { // error
+            self.apiError = true;
+            self.apiStatus = status;
+          }
+        );
+        // otherwise, show error message
+
+      };
 
       self.find_myLocation = function(){
         if(!myDetails.myDetails.vehicleMake ||!myDetails.myDetails.vehicleModel ||!myDetails.myDetails.vehicleSpec){
@@ -331,7 +388,7 @@ app.controller('mainCtrl',[
 
       self.listOfCars = myCars.myCars;
       self.select_car = function(selectedCar){
-        self.selectedCar = selectedCar.vehicleMake+" "+selectedCar.vehicleModel+" "+selectedCar.vehicleSpec;
+        self.selectedCar = selectedCar.make+" "+selectedCar.model+" "+selectedCar.specification;
         myDetails.set_car(selectedCar);
       };
 
