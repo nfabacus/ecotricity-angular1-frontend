@@ -39,7 +39,6 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
   };
 
   o.set_car = function(selectedCar){
-    console.log("hello, in factory! selectedCar:", selectedCar);
     o.myDetails.vehicleMake = selectedCar.vehicleMake;
     o.myDetails.vehicleModel = selectedCar.vehicleModel;
     o.myDetails.vehicleSpec = selectedCar.vehicleSpec;
@@ -52,7 +51,7 @@ app.factory('myDetails', ['$http', '$q', function($http, $q){
       console.log("Finding your location...");
       navigator.geolocation.getCurrentPosition(show_position, show_error);
     } else {
-      console.log("Geolocation is not supported by this browser.");
+      document.getElementById('errorMessage').innerHTML = "Geolocation is not supported by this browser.";
     }
     function show_position(position){
       console.log("your coords found:", position.coords);
@@ -114,7 +113,6 @@ app.service('myMap', ['$q', function($q) {
   };
 
   o.select_markerIcon = function(pumpModel){
-    console.log("pumbModel:", pumpModel);
     var iconImg ="";
     switch(pumpModel) {
       case "DC (CHAdeMO) / CCS":
@@ -190,7 +188,7 @@ app.service('myMap', ['$q', function($q) {
   return o;
 }]);
 
-app.factory('chargingStations', ['$q','$http', function($q, $http){
+app.service('chargingStations', ['$q','$http', function($q, $http){
   var o = {
     chargingStations: []
   };
@@ -209,9 +207,7 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
       },
       "data": $.param(myCarData)
     };
-    console.log("get_10Stations param data:", settings.data);
     $http(settings).then(function(data){
-      console.log("response:", data.data.result);
       deferred.resolve(data.data.result);
     }, function(err){
       deferred.reject();
@@ -221,8 +217,6 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
   };
 
   o.get_pumpDetails = function(locatObj, mydetails){
-    console.log("locatObj:", locatObj);
-    console.log("mydetails:", mydetails);
     var deferred = $q.defer();
     var settings = {
       "async": true,
@@ -242,7 +236,6 @@ app.factory('chargingStations', ['$q','$http', function($q, $http){
       })
     };
     $http(settings).then(function(data){
-      console.log("response for pump details:", data.data.result.pump);
       deferred.resolve(data.data.result.pump);
     }, function(err){
       deferred.reject();
@@ -286,7 +279,6 @@ app.controller('mainCtrl',[
           myDetails.get_myCoords()
           .then(
             function set_coords(coordsData){ //success
-              console.log(coordsData);
               self.message = "Got your location.";
               self.loading = false;
               myDetails.myDetails.name = "My location";
@@ -311,7 +303,6 @@ app.controller('mainCtrl',[
         } else {
           self.message = "Finding your location...";
           self.loading = true;
-          console.log("In controller, searchPlace:", self.searchPlace);
           self.apiError = false;
             myMap.textSearch(self.searchPlace)
             .then(
@@ -340,8 +331,6 @@ app.controller('mainCtrl',[
 
       self.listOfCars = myCars.myCars;
       self.select_car = function(selectedCar){
-        console.log("myDetails:", myDetails);
-        console.log("hello, in controller! selectedCar:", selectedCar);
         self.selectedCar = selectedCar.vehicleMake+" "+selectedCar.vehicleModel+" "+selectedCar.vehicleSpec;
         myDetails.set_car(selectedCar);
       };
@@ -366,19 +355,12 @@ app.controller('mainCtrl',[
               self.message = "Found 10 nearest charging stations.";
               self.loading = false;
               self.list = res;
-              console.log("LIST(should have no duplicate station):", self.list);
               angular.copy(res, chargingStations.chargingStations);
-              console.log("in get_10Stations, chargingStations:", chargingStations.chargingStations);
-              console.log("myMap:", myMap);
               chargingStations.chargingStations.forEach(function(station, index){
-                console.log("index inside charginstations.foreach:", index);
                 chargingStations.get_pumpDetails(station, myDetails.myDetails).then(
                   function(res) {
-                    console.log("index inside get_pumpDetails:", index);
                     chargingStations.chargingStations[index].pumpDetails = res;
 
-                    console.log("charginStations.charginStations[index]:", chargingStations.chargingStations[index]);
-                    console.log("res", res);
                     var marker = self.create_marker(chargingStations.chargingStations[index]);
                     myMap.markers[index]=marker;
                   },
@@ -409,8 +391,6 @@ app.controller('mainCtrl',[
 
       self.create_marker = function(locatObj) {
         locatObj.markerIcon = myMap.select_markerIcon(locatObj.pumpModel);
-        console.log("In create_marker,");
-        console.log("locatObj:", locatObj);
         var marker = new google.maps.Marker({
               map: myMap.map,
               position: new google.maps.LatLng(locatObj.latitude, locatObj.longitude),
@@ -450,7 +430,6 @@ app.controller('mainCtrl',[
           marker,
           'click',
           function(){
-                console.log("compiled var in myMap service after click", compiled[0]);
                 myMap.infoWindow.setContent( compiled[0]);
                 myMap.infoWindow.open( myMap.map, marker );
         });
@@ -459,25 +438,26 @@ app.controller('mainCtrl',[
       };
 
       self.open_InfoWindowByMarkerIndex = function(index) {
-        console.log("index in infoWindow:", index);
-        console.log("myMap.markers array in infoWindow:", myMap.markers);
         google.maps.event.trigger(myMap.markers[index], 'click');
       };
 
       self.open_stationPanel = function(locationId){
-        console.log("open Station Panel!! locationId is ", locationId);
-       self.stationDetails = chargingStations.chargingStations.filter(function(station){
+        self.message = "Loading...";
+        self.loading = true;
+        self.stationDetails = chargingStations.chargingStations.filter(function(station){
           return station.locationId === String(locationId);
         })[0];
-        console.log("stationDetails with (more than 1) pumpS details:", self.stationDetails);
-        self.menuMode = false;
-        self.mapMode = false;
-        self.stationPanelMode = true;
+        $timeout(function(){
+          self.message = null;
+          self.loading = false;
+          self.menuMode = false;
+          self.mapMode = false;
+          self.stationPanelMode = true;
+        }, 500);
 
       };
 
       self.close_stationPanel = function(){
-        console.log("closed Station Panel!!");
         self.stationPanelMode = false;
         self.menuMode = false;
         self.mapMode = true;

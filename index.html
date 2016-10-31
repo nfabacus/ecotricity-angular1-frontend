@@ -11,7 +11,7 @@
   </head>
   <body >
     <div id="container" ng-cloak>
-      <directory-brand></directory-brand>
+      <directory-brand ng-cloak></directory-brand>
 
       <div ng-controller="mainCtrl as mCtrl">
         <div ng-if="mCtrl.menuMode" ng-cloak class="menuBoxBackground"></div>
@@ -76,8 +76,11 @@
             <div ng-repeat="connector in pumpObj.connector" class='connectorDiv'>
               <img ng-src="{{mCtrl.select_markerIcon(connector.type)}}" />
               <h4 class="narrow">Connector {{ connector.connectorId }}: {{connector.name}}</h4>
-              <p class="narrow">Compatibility with your car: {{ connector.compatible }}</p>
-              <p class="narrow">Status: {{connector.status}}</p>
+
+              <p ng-if="connector.compatible ==''" class="narrow success">Compatible with your car!</p>
+              <p ng-if="connector.compatible =='X'" class="narrow alarm">Sorry, not compatible with your car</p>
+
+              <p class="narrow" ng-class="{ 'success': connector.status == 'Available' && connector.compatible !='X'}">Status: {{connector.status}}</p>
               <p class="narrow">Session Duration: {{connector.sessionDuration}} mins</p>
             </div>
           </div>

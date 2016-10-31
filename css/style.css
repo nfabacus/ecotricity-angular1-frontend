@@ -5,6 +5,9 @@
 
 .strapline {
   margin: 18px 0px 18px 0px;
+  font-size: 19px;
+  position: relative;
+  top: -13px;
 }
 
 /*General style*/
@@ -26,6 +29,14 @@ body {
 
 .inline {
   display: inline-block;
+}
+
+.success {
+  color: green;
+}
+
+.alarm {
+  color: red;
 }
 
 select, input {
@@ -69,7 +80,6 @@ blockquote.bubble {
 }
 blockquote.speech {
   background: url(../../library/images/speech-bubble2.svg);
-  /*width: 25%;*/
   padding: 10% 5% 15% 5%;
   z-index: 6;
 }
@@ -151,10 +161,6 @@ ul {
 /*style for info window*/
 .narrow {
   margin: 5px;
-}
-
-.infowindow {
-
 }
 
 .gm-style .gm-style-iw {
