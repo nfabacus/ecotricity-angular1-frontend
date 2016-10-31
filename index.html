@@ -7,30 +7,33 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
     <script src="node_modules/angular/angular.min.js"></script>
+    <script src="node_modules/angular-animate/angular-animate.min.js"></script>
     <script src="angularApp.js"></script>
   </head>
   <body >
     <div id="container" ng-cloak>
-      <directory-brand ng-cloak></directory-brand>
-
       <div ng-controller="mainCtrl as mCtrl">
+        <directory-brand></directory-brand>
+
         <div ng-if="mCtrl.menuMode" ng-cloak class="menuBoxBackground"></div>
         <div ng-if="mCtrl.menuMode" ng-cloak class="menuBox">
+          <directory-brand></directory-brand>
           <h2>Electric Highway Finder</h2>
           <div ng-if="mCtrl.loginPanelOn" id="LogInPanel">
-            <h3>Please type in your username and password in order to access the list of your own cars.</h3>
+            <h3>Please type in your username and password to access the list of your cars.</h3>
             <form name="loginForm" ng-submit="mCtrl.login()">
-              Username:
+              <label class="labelBackground">Username:</label>
               <input class="inputBox" name="username" type="text" ng-model="mCtrl.username" required autofocus />
               <br/>
-              Password:
+              <label class="labelBackground">Password:</label>
               <input class="inputBox" name="password" type="password" ng-model="mCtrl.password" required autofocus />
+              <br/>
               <br/>
               <button class="btn" ng-disabled="loginForm.$invalid">Access your car details</button>
             </form>
           </div>
 
-          <div ng-if="!mCtrl.loginPanelOn" id="instruction" ng-cloak>
+          <div ng-if="!mCtrl.loginPanelOn" id="instruction" class="instructionPanel" ng-cloak>
             <label for="cars">1. Please select your electric car: </label>
             <select ng-cloak ng-model="selectedCar" ng-options="car as car.make +' '+car.model + ' '+car.specification for car in mCtrl.listOfCars" ng-change="mCtrl.select_car(selectedCar)"></select>
             <h3>{{selectedCar.vehicleMake +' '+selectedCar.vehicleModel + ' '+selectedCar.vehicleSpec}}</h3>
@@ -59,9 +62,9 @@
         </div>
 
         <div id="stationDetailsView" ng-cloak>
-          <h3 ng-if="mCtrl.list" ng-cloak class='animated fadeIn'>Here are the 10 charnging stations closest to you.</h3>
+          <h3 ng-if="mCtrl.list" ng-cloak>Here are the 10 charnging stations closest to you.</h3>
 
-          <h3 id="mapTitle" class="narrow" >Map</h3>
+          <h3 id="mapTitle" class="narrow">Map</h3>
           <div id="map"></div>
 
           <h3 id="stationList" class="narrow">List</h3>
@@ -90,10 +93,10 @@
               <img ng-src="{{mCtrl.select_markerIcon(connector.type)}}" />
               <h4 class="narrow">Connector {{ connector.connectorId }}: {{connector.name}}</h4>
 
-              <p ng-if="connector.compatible ==''" class="narrow success">Compatible with your car!</p>
-              <p ng-if="connector.compatible =='X'" class="narrow alarm">Sorry, not compatible with your car</p>
+              <p ng-if="connector.compatible ==''" class="narrow alarm">Sorry, incompatible with your car</p>
+              <p ng-if="connector.compatible =='X'" class="narrow success">Compatible with your car!</p>
 
-              <p class="narrow" ng-class="{ 'success': connector.status == 'Available' && connector.compatible !='X'}">Status: {{connector.status}}</p>
+              <p class="narrow" ng-class="{ 'success': connector.status == 'Available' && connector.compatible =='X'}">Status: {{connector.status}}</p>
               <p class="narrow">Session Duration: {{connector.sessionDuration}} mins</p>
             </div>
           </div>
@@ -101,7 +104,7 @@
 
           <div id="directionsMap"></div>
 
-          <div id="directionsPanel" class="animated slideInUp"></div>
+          <div id="directionsPanel"></div>
         </div>
 
         <div ng-cloak>

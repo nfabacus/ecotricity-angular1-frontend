@@ -1,4 +1,4 @@
-var app = angular.module('ecoAngular1App',[]);
+var app = angular.module('ecoAngular1App',['ngAnimate']);
 
 app.config(['$compileProvider', function ($compileProvider) {
     $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|local|data|chrome-extension):/);
@@ -301,19 +301,25 @@ app.controller('mainCtrl',[
       self.login = function(){
         myCars.get_myCars(self.username, self.password).then(
           function(res) { //success
-            self.message = "Found your car details.";
-            self.loading = false;
-            myCars.myCars = res;
-            self.listOfCars = myCars.myCars;
-
-            //Deletes username and password immediately as a secure login system is not implemented here for now.
-            self.username = "";
-            self.password = "";
+            if(res == false ) {
+              self.message = "Incorrect username and/or password. Please check.";
+              self.loading = false;
+            } else {
+              self.message = "Found your car details.";
+              self.loading = false;
+              console.log("res in ger_myCars:", res);
+              myCars.myCars = res;
+              self.listOfCars = myCars.myCars;
+              self.loginPanelOn = false;
+              //Deletes username and password immediately as a secure login system is not implemented here for now.
+              self.username = "";
+              self.password = "";
+            }
 
             $timeout(function(){
               self.message = null;
-            }, 1000);
-            self.loginPanelOn = false;
+            }, 1500);
+
           },
           function(status) { // error
             self.apiError = true;

@@ -18,6 +18,7 @@
   "homepage": "https://github.com/nfabacus/ecotricity-api-angular1#readme",
   "dependencies": {
     "angular": "^1.5.8",
+    "angular-animate": "^1.5.8",
     "angular-ui-router": "^0.3.1",
     "jquery": "^3.1.1"
   }

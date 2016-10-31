@@ -47,13 +47,15 @@ select, input {
   font-family: 'Gloria Hallelujah', cursive;
   color: #302530;
   font-size: 22px;
-  padding: 10px 20px 10px 20px;
+  padding: 10px;
   text-decoration: none;
 }
-select, input {
-    margin: 2px;
-    padding: 10px 0px 10px 0px;
+
+.labelBackground {
+  background: rgba(255, 255, 255, 0.47);
+  padding: 5px 10px 5px 10px;
 }
+
 @media only screen and (max-width: 330px) {
   select, input {
       margin: 2px;
@@ -105,11 +107,11 @@ blockquote.speech {
 /*Style for menuBox*/
 .menuBox {
   font-size: 25px;
-  background-color: rgba(251, 251, 251, 0.28);
+  background-color: rgba(251, 251, 251, 0.22);
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  padding-top: 150px;
+  padding-top: 100px;
   margin: 0%;
   z-index: 4;
   width: 100%;
@@ -143,6 +145,20 @@ blockquote.speech {
 .errorMessage {
   color: red;
 }
+
+#instruction {
+  padding: 40px 10px 10px 10px;
+}
+.instructionPanel.ng-enter {
+  transition: 1s, ease all;
+  opacity: 0;
+  transform: translateX(100%);
+}
+.instructionPanel.ng-enter.ng-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 /*Style for Nearest Location List*/
 ul {
     list-style-image: url('../library/images/point-b.png');
