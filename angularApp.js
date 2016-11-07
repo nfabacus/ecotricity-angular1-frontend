@@ -4,6 +4,8 @@ app.config(['$compileProvider', function ($compileProvider) {
     $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|local|data|chrome-extension):/);
 }]);
 
+
+
 app.directive('directoryBrand', function(){
   return {
     templateUrl: 'directory-brand.html'
@@ -30,7 +32,7 @@ app.factory('myCars', ['$http', '$q', function($http, $q){
     var settings = {
       "async": true,
       "crossDomain": true,
-      "url": "https://www.ecotricity.co.uk/api/ezx/v1/getUserVehicleList",
+      "url": "http://localhost:8000/getUserVehicleList",
       "method": "POST",
       "headers": {
         "content-type": "application/x-www-form-urlencoded",
@@ -228,7 +230,7 @@ app.service('chargingStations', ['$q','$http', function($q, $http){
     var settings = {
       "async": true,
       "crossDomain": true,
-      "url": "https://www.ecotricity.co.uk/api/ezx/v1/getPumpList",
+      "url": "http://localhost:8000/getPumpList",
       "method": "POST",
       "headers": {
         "content-type": "application/x-www-form-urlencoded",
@@ -251,7 +253,7 @@ app.service('chargingStations', ['$q','$http', function($q, $http){
     var settings = {
       "async": true,
       "crossDomain": true,
-      "url": "https://www.ecotricity.co.uk/api/ezx/v1/getLocationDetails",
+      "url": "http://localhost:8000/getLocationDetails",
       "method": "POST",
       "headers": {
         "content-type": "application/x-www-form-urlencoded",
@@ -301,13 +303,14 @@ app.controller('mainCtrl',[
       self.login = function(){
         myCars.get_myCars(self.username, self.password).then(
           function(res) { //success
+            console.log("res is:", res);
             if(res == false ) {
               self.message = "Incorrect username and/or password. Please check.";
               self.loading = false;
             } else {
               self.message = "Found your car details.";
               self.loading = false;
-              console.log("res in ger_myCars:", res);
+              console.log("res in get_myCars:", res);
               myCars.myCars = res;
               self.listOfCars = myCars.myCars;
               self.loginPanelOn = false;

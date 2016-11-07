@@ -1,21 +1,21 @@
 {
-  "name": "ecotricity-api-angular1",
+  "name": "ecotricity-angular1-frontend",
   "version": "1.0.0",
-  "description": "Angular1 app for ecotricity api",
+  "description": "Angular1 web app for ecotricity api",
   "main": "angularApp.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nfabacus/ecotricity-api-angular1.git"
+    "url": "git+https://github.com/nfabacus/ecotricity-angular1-frontend.git"
   },
   "author": "Nobuyuki Fujioka",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nfabacus/ecotricity-api-angular1/issues"
+    "url": "https://github.com/nfabacus/ecotricity-angular1-frontend/issues"
   },
-  "homepage": "https://github.com/nfabacus/ecotricity-api-angular1#readme",
+  "homepage": "https://github.com/nfabacus/ecotricity-angular1-frontend#readme",
   "dependencies": {
     "angular": "^1.5.8",
     "angular-animate": "^1.5.8",
